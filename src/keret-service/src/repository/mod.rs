@@ -1,12 +1,12 @@
-use std::backtrace::Backtrace;
-use snafu::Snafu;
 use keret_service_transmit::ActionReport;
+use snafu::Snafu;
+use std::backtrace::Backtrace;
 
-mod yaml_storage;
 mod storage_based_repo;
+mod yaml_storage;
 
-pub(crate) use yaml_storage::YamlRepositoryStorage;
 pub(crate) use storage_based_repo::StorageBasedRepository;
+pub(crate) use yaml_storage::YamlRepositoryStorage;
 
 #[derive(Snafu, Debug)]
 #[snafu()]
@@ -14,22 +14,20 @@ pub enum RepositoryError {
     #[snafu(display("Can't open the repository file"))]
     CantOpenRepository {
         #[snafu(source(from(std::io::Error, Box::new)))]
-        source: Box<std::io::Error>
+        source: Box<std::io::Error>,
     },
     #[snafu(display("Deserialization of todos from repository failed"))]
     DeserializationFailed {
         #[snafu(source(from(serde_yaml::Error, Box::new)))]
-        source: Box<serde_yaml::Error>
+        source: Box<serde_yaml::Error>,
     },
     #[snafu(display("Deserialization of todos into repository failed"))]
     SerializationFailed {
         #[snafu(source(from(serde_yaml::Error, Box::new)))]
-        source: Box<serde_yaml::Error>
+        source: Box<serde_yaml::Error>,
     },
     #[snafu(display("Lock is poisoned, can't acquire"))]
-    LockPoisoned {
-        backtrace: Option<Backtrace>
-    },
+    LockPoisoned { backtrace: Option<Backtrace> },
 }
 
 pub(crate) trait RepositoryStorage {
@@ -37,7 +35,7 @@ pub(crate) trait RepositoryStorage {
     fn store(&mut self, list: Vec<ActionReport>) -> Result<(), RepositoryError>;
 }
 
-pub(crate) trait ToDoRepository : Clone + Send + Sync {
+pub(crate) trait ToDoRepository: Clone + Send + Sync {
     fn list(&self) -> Result<Vec<ActionReport>, RepositoryError>;
     fn add(&self, value: ActionReport) -> Result<usize, RepositoryError>;
 }

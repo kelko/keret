@@ -12,17 +12,15 @@ pub struct ActionReport {
 
 impl ActionReport {
     pub fn new(duration: u64) -> Self {
-        Self {
-            duration
-        }
+        Self { duration }
     }
 
     pub fn from_message(data: &[u8]) -> Self {
-        from_bytes(&data).unwrap()
+        from_bytes(data).unwrap()
     }
 
-    pub fn as_message(&self) -> heapless::Vec<u8,8> {
-        to_vec::<ActionReport,8>(&self).unwrap()
+    pub fn as_message(&self) -> heapless::Vec<u8, 8> {
+        to_vec::<ActionReport, 8>(self).unwrap()
     }
 
     pub fn duration(&self) -> u64 {

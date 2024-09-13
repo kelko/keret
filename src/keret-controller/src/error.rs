@@ -24,17 +24,14 @@ impl Display for UarteError {
 
 impl snafu::Error for UarteError {}
 
-#[derive(Debug,Snafu)]
+#[derive(Debug, Snafu)]
 #[snafu(visibility(pub(crate)))]
 pub(crate) enum Error {
     #[snafu(display("Failed writing data to the serial port"))]
     WritingToSerialPortFailed {
         #[snafu(source(from(microbit::hal::uarte::Error, UarteError::new)))]
-        source: UarteError
+        source: UarteError,
     },
     #[snafu(display("Incoherent timestamps. Started at {start} & ended at {end}"))]
-    IncoherentTimestamps {
-        start: u64,
-        end: u64
-    },
+    IncoherentTimestamps { start: u64, end: u64 },
 }

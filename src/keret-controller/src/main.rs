@@ -1,40 +1,35 @@
 #![no_main]
 #![no_std]
 
-mod display;
-mod mode;
-mod time;
 mod controls;
-mod serialize;
+mod display;
 mod domain;
 mod error;
+mod mode;
+mod serialize;
+mod time;
 
 use rtt_target::{rprintln, rtt_init_print};
-use panic_rtt_target as _;
 
-use core::cell::RefCell;
-use cortex_m::{
-    interrupt::{Mutex},
-    prelude::_embedded_hal_blocking_delay_DelayMs
+use crate::{
+    controls::init_buttons,
+    controls::{get_requested_interaction, InteractionRequest},
+    display::display_image,
+    display::init_display,
+    domain::switch_mode,
+    domain::{reset_mode, toggle_mode},
+    error::Error,
+    mode::AppMode,
+    time::init_time,
 };
+use core::cell::RefCell;
+use cortex_m::{interrupt::Mutex, prelude::_embedded_hal_blocking_delay_DelayMs};
 use cortex_m_rt::entry;
 use microbit::{
     board::Board,
-    hal::{Timer,
-    uarte, uarte::Parity, uarte::Baudrate}
+    hal::{uarte, uarte::Baudrate, uarte::Parity, Timer},
 };
 use snafu::Error as _;
-use crate::{
-    domain::switch_mode,
-    display::init_display,
-    controls::init_buttons,
-    time::init_time,
-    mode::AppMode,
-    controls::{get_requested_interaction, InteractionRequest},
-    display::display_image,
-    domain::{reset_mode, toggle_mode},
-    error::Error
-};
 
 static CURRENT_MODE: Mutex<RefCell<AppMode>> = Mutex::new(RefCell::new(AppMode::Idle));
 
@@ -67,9 +62,9 @@ fn main() -> ! {
                 if let Err(error) = toggle_mode(&mut serial) {
                     handle_error(error)
                 }
-            },
+            }
             InteractionRequest::Reset => reset_mode(),
-            InteractionRequest::None => {},
+            InteractionRequest::None => {}
         }
 
         timer.delay_ms(500_u32);

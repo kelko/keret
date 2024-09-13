@@ -4,7 +4,7 @@ use crate::repository::{StorageBasedRepository, YamlRepositoryStorage};
 mod api;
 mod repository;
 
-const PORT : u16 = 3000;
+const PORT: u16 = 3000;
 
 #[tokio::main]
 async fn main() {

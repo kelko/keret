@@ -8,7 +8,7 @@ pub(crate) enum AppMode {
     Idle,
     Running(Instant),
     Sending,
-    Error
+    Error,
 }
 
 impl Render for AppMode {
@@ -22,7 +22,7 @@ impl Render for AppMode {
     }
 }
 
-const IDLE_SPRITE: [[u8;5];5] = [
+const IDLE_SPRITE: [[u8; 5]; 5] = [
     [5, 5, 0, 5, 5],
     [5, 5, 0, 5, 5],
     [5, 5, 0, 5, 5],
@@ -30,7 +30,7 @@ const IDLE_SPRITE: [[u8;5];5] = [
     [5, 5, 0, 5, 5],
 ];
 
-const RUNNING_SPRITE: [[u8;5];5] = [
+const RUNNING_SPRITE: [[u8; 5]; 5] = [
     [0, 5, 0, 0, 0],
     [0, 5, 5, 0, 0],
     [0, 5, 5, 5, 0],
@@ -38,7 +38,7 @@ const RUNNING_SPRITE: [[u8;5];5] = [
     [0, 5, 0, 0, 0],
 ];
 
-const SENDING_SPRITE: [[u8;5];5] = [
+const SENDING_SPRITE: [[u8; 5]; 5] = [
     [0, 0, 5, 0, 0],
     [0, 5, 5, 5, 0],
     [5, 0, 5, 0, 5],
@@ -46,8 +46,7 @@ const SENDING_SPRITE: [[u8;5];5] = [
     [0, 0, 5, 0, 0],
 ];
 
-
-const ERROR_SPRITE: [[u8;5];5] = [
+const ERROR_SPRITE: [[u8; 5]; 5] = [
     [5, 5, 5, 5, 5],
     [0, 5, 5, 5, 0],
     [0, 0, 5, 0, 0],

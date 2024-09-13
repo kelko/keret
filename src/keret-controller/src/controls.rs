@@ -1,16 +1,13 @@
 use core::cell::RefCell;
 use cortex_m::interrupt::{free, Mutex};
-use microbit::{
-    hal::gpiote::Gpiote,
-    board::Buttons,
-    pac,
-};
 use microbit::pac::interrupt;
+use microbit::{board::Buttons, hal::gpiote::Gpiote, pac};
 
 static GPIO: Mutex<RefCell<Option<Gpiote>>> = Mutex::new(RefCell::new(None));
-static INTERACTION_REQUEST: Mutex<RefCell<InteractionRequest>> = Mutex::new(RefCell::new(InteractionRequest::None));
+static INTERACTION_REQUEST: Mutex<RefCell<InteractionRequest>> =
+    Mutex::new(RefCell::new(InteractionRequest::None));
 
-#[derive(Debug,Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default)]
 pub(crate) enum InteractionRequest {
     #[default]
     None,
@@ -65,10 +62,8 @@ fn GPIOTE() {
 
             let request = if a_pressed {
                 InteractionRequest::Reset
-
             } else if b_pressed {
                 InteractionRequest::ToggleMode
-
             } else {
                 InteractionRequest::None
             };

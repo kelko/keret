@@ -1,12 +1,12 @@
 mod listening;
 mod sending;
 
-use std::path::PathBuf;
-use std::time::Duration;
-use clap::Parser;
-use snafu::{ResultExt, Snafu};
 use crate::listening::PortListener;
 use crate::sending::ReportSender;
+use clap::Parser;
+use snafu::{ResultExt, Snafu};
+use std::path::PathBuf;
+use std::time::Duration;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -52,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tokio::time::sleep(Duration::from_millis(500)).await;
 
         match read_and_forward(&mut listener, &sender).await {
-            Ok(()) => {},
+            Ok(()) => {}
             Err(e) => {
                 report(&e);
             }
@@ -60,17 +60,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
-async fn read_and_forward(listener: &mut PortListener, sender: &ReportSender) -> Result<(), AppError> {
-    let report = listener.read_next_report().context(FailedListeningOnPortSnafu)?;
-    if let Some(report) =  report {
-        sender.send(report.duration()).await.context(FailedSendingToTargetSnafu)?;
+async fn read_and_forward(
+    listener: &mut PortListener,
+    sender: &ReportSender,
+) -> Result<(), AppError> {
+    let report = listener
+        .read_next_report()
+        .context(FailedListeningOnPortSnafu)?;
+    if let Some(report) = report {
+        sender
+            .send(report.duration())
+            .await
+            .context(FailedSendingToTargetSnafu)?;
     }
 
     Ok(())
 }
 
-pub fn report<E: 'static>(err: &E)
+pub fn report<E>(err: &E)
 where
+    E: 'static,
     E: std::error::Error,
     E: snafu::ErrorCompat,
     E: Send + Sync,

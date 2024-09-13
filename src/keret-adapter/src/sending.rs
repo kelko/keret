@@ -1,18 +1,17 @@
-use snafu::{ResultExt, Snafu};
 use keret_service_transmit::ActionReport;
+use snafu::{ResultExt, Snafu};
 
 #[derive(Debug, Snafu)]
 pub(crate) enum SendingError {
     #[snafu(display("Could not send the report to URL {target}"))]
     CouldNotSendReport {
         target: String,
-        source: reqwest::Error
-    }
-
+        source: reqwest::Error,
+    },
 }
 
 pub(crate) struct ReportSender {
-    target: String
+    target: String,
 }
 
 impl ReportSender {
@@ -24,11 +23,14 @@ impl ReportSender {
         let report = report.into();
         let client = reqwest::Client::new();
 
-        let _res = client.post(&self.target)
+        let _res = client
+            .post(&self.target)
             .json(&report)
             .send()
             .await
-            .context(CouldNotSendReportSnafu { target: self.target.clone() })?;
+            .context(CouldNotSendReportSnafu {
+                target: self.target.clone(),
+            })?;
 
         Ok(())
     }

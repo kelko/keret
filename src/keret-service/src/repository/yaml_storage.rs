@@ -1,7 +1,10 @@
+use crate::repository::{
+    CantOpenRepositorySnafu, DeserializationFailedSnafu, RepositoryError, RepositoryStorage,
+    SerializationFailedSnafu,
+};
+use keret_service_transmit::ActionReport;
 use snafu::ResultExt;
 use tracing::instrument;
-use keret_service_transmit::ActionReport;
-use crate::repository::{CantOpenRepositorySnafu, DeserializationFailedSnafu, RepositoryError, RepositoryStorage, SerializationFailedSnafu};
 
 #[derive(Debug)]
 pub(crate) struct YamlRepositoryStorage {
@@ -11,7 +14,7 @@ pub(crate) struct YamlRepositoryStorage {
 impl YamlRepositoryStorage {
     pub(crate) fn new(filename: impl Into<String>) -> Self {
         Self {
-            filename: filename.into()
+            filename: filename.into(),
         }
     }
 }
@@ -20,7 +23,7 @@ impl RepositoryStorage for YamlRepositoryStorage {
     #[instrument(skip(self))]
     fn list(&self) -> Result<Vec<ActionReport>, RepositoryError> {
         if std::fs::metadata(&self.filename).is_err() {
-            return Ok(vec![])
+            return Ok(vec![]);
         }
 
         let file = std::fs::File::open(&self.filename).context(CantOpenRepositorySnafu)?;
