@@ -1,0 +1,20 @@
+[package]
+name = "keret-controller"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+microbit-v2 = {  version = "0.15.1", features = ["embedded-hal-02"] }
+cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
+cortex-m-rt = "0.7.0"
+rtt-target = { version = "0.5.0"}
+panic-rtt-target = { version = "0.1.3"}
+lsm303agr = "1.1.0"
+nb = "1.1.0"
+libm = "0.2.8"
+heapless = "0.8.0"
+tiny-led-matrix = "1.0.2"
+embedded-hal = "1.0.0"
+embedded-hal-nb = "1.0.0"
+snafu = { version = "0.8.4", default-features = false }
+keret-controller-transmit = { path = "../keret-controller-transmit" }

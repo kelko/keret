@@ -1,0 +1,18 @@
+[package]
+name = "keret-service"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = { version = "0.7.5" }
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = { version = "0.9.33" }
+tokio = { version = "1.0", features = ["full"] }
+tower = { version = "0.4", features = ["util", "timeout"] }
+tower-http = { version = "0.5.0", features = ["add-extension", "trace"] }
+tracing = { version = "0.1" }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+snafu = { version = "0.8.4" }
+prometheus = { version = "0.13.4", features = ["process"] }
+lazy_static = "1.5.0"
+keret-service-transmit = {path = "../keret-service-transmit"}
