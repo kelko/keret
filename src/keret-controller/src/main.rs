@@ -29,6 +29,7 @@ use microbit::{
     board::Board,
     hal::{uarte, uarte::Baudrate, uarte::Parity, Timer},
 };
+use panic_rtt_target as _;
 use snafu::Error as _;
 
 static CURRENT_MODE: Mutex<RefCell<AppMode>> = Mutex::new(RefCell::new(AppMode::Idle));
