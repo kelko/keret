@@ -41,13 +41,3 @@ Components
 - **keret-adapter**: The CLI running on the connected device, reading the reports from the serial port and forwarding to
   the service
 - **keret-service**: The REST API service receiving and storing the activity reports
-
-TODO
------
-
-### time handing ("now()")
-
-this is rudimentary at best and rather broken, as it does not yet handle timer wraps currently. Waiting for either
-microbit-v2 crate to switch to embassy or otherwise understand which interrupt is caused by the SYST clock.
-
-But this does not hinder the usability of the example to showcase the original goal.

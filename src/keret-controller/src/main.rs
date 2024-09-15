@@ -44,7 +44,7 @@ fn main() -> ! {
     let mut timer = Timer::new(board.TIMER0).into_periodic();
 
     init_display(board.TIMER1, board.display_pins);
-    init_time(board.SYST);
+    init_time(board.CLOCK, board.RTC1);
     init_buttons(board.GPIOTE, board.buttons);
 
     let mut serial = uarte::Uarte::new(
