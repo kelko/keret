@@ -71,7 +71,7 @@ fn GPIOTE() {
             gpiote.channel0().reset_events();
             gpiote.channel1().reset_events();
 
-            *INTERACTION_REQUEST.borrow(cs).borrow_mut() = request;
+            INTERACTION_REQUEST.borrow(cs).replace(request);
         }
     });
 }

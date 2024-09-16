@@ -2,13 +2,14 @@ use tiny_led_matrix::Render;
 
 type Instant = u64;
 
-#[derive(Debug, Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub(crate) enum AppMode {
     #[default]
     Idle,
     Running(Instant),
     Sending,
     Error,
+    Fatal,
 }
 
 impl Render for AppMode {
@@ -18,6 +19,7 @@ impl Render for AppMode {
             AppMode::Running(_) => RUNNING_SPRITE[y][x],
             AppMode::Sending => SENDING_SPRITE[y][x],
             AppMode::Error => ERROR_SPRITE[y][x],
+            AppMode::Fatal => FATAL_SPRITE[y][x],
         }
     }
 }
@@ -52,4 +54,12 @@ const ERROR_SPRITE: [[u8; 5]; 5] = [
     [0, 0, 5, 0, 0],
     [0, 0, 0, 0, 0],
     [0, 0, 5, 0, 0],
+];
+
+const FATAL_SPRITE: [[u8; 5]; 5] = [
+    [5, 0, 0, 0, 5],
+    [0, 5, 0, 5, 0],
+    [0, 0, 5, 0, 0],
+    [0, 5, 0, 5, 0],
+    [5, 0, 0, 0, 5],
 ];

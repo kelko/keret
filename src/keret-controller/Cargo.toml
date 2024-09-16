@@ -17,4 +17,4 @@ tiny-led-matrix = "1.0.2"
 embedded-hal = "1.0.0"
 embedded-hal-nb = "1.0.0"
 snafu = { version = "0.8.4", default-features = false }
-keret-controller-transmit = { path = "../keret-controller-transmit" }
+keret-controller-transmit = { path = "../keret-controller-transmit", default-features = false }

@@ -32,6 +32,14 @@ pub(crate) enum Error {
         #[snafu(source(from(microbit::hal::uarte::Error, UarteError::new)))]
         source: UarteError,
     },
+    #[snafu(display("Failed to deserialize message"))]
+    DeserializeMessageFailed {
+        source: keret_controller_transmit::Error,
+    },
     #[snafu(display("Incoherent timestamps. Started at {start} & ended at {end}"))]
     IncoherentTimestamps { start: u64, end: u64 },
+    #[snafu(display("Failed to initialize the clock"))]
+    ClockInitializationFailed,
+    #[snafu(display("Could not read now() from the timer"))]
+    NoTimer,
 }

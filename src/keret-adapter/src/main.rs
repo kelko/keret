@@ -35,8 +35,11 @@ pub(crate) enum AppError {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
-    let device = cli.device.to_str().unwrap();
     let url = cli.url;
+    let Some(device) = cli.device.to_str() else {
+        eprintln!("--device must be valid UTF-8");
+        std::process::exit(1);
+    };
 
     let mut listener = match listening::PortListener::new(device) {
         Ok(l) => l,

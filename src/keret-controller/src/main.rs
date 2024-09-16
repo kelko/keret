@@ -44,7 +44,9 @@ fn main() -> ! {
     let mut timer = Timer::new(board.TIMER0).into_periodic();
 
     init_display(board.TIMER1, board.display_pins);
-    init_time(board.CLOCK, board.RTC1);
+    if let Err(err) = init_time(board.CLOCK, board.RTC1) {
+        handle_init_error(err);
+    }
     init_buttons(board.GPIOTE, board.buttons);
 
     let mut serial = uarte::Uarte::new(
@@ -61,7 +63,7 @@ fn main() -> ! {
         match request {
             InteractionRequest::ToggleMode => {
                 if let Err(error) = toggle_mode(&mut serial) {
-                    handle_error(error)
+                    handle_runtime_error(error)
                 }
             }
             InteractionRequest::Reset => reset_mode(),
@@ -72,8 +74,22 @@ fn main() -> ! {
     }
 }
 
-fn handle_error(err: Error) {
+#[inline(always)]
+fn handle_runtime_error(err: Error) {
     switch_mode(AppMode::Error);
+    report_error(err);
+}
+
+fn handle_init_error(err: Error) {
+    switch_mode(AppMode::Fatal);
+    report_error(err);
+    loop {
+        // don't let user interact if init failed
+        continue;
+    }
+}
+
+fn report_error(err: Error) {
     rprintln!("[ERROR] {}", err);
     let mut source = err.source();
 

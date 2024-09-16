@@ -13,6 +13,10 @@ pub(crate) enum ListeningError {
     },
     #[snafu(display("Could not read data from serial port"))]
     CouldNotReadFromPort { source: std::io::Error },
+    #[snafu(display("Could not deserialize the serial message"))]
+    CouldNotDeserializeMessage {
+        source: keret_controller_transmit::Error,
+    },
 }
 
 pub(crate) struct PortListener {
@@ -56,7 +60,9 @@ impl PortListener {
                 self.buffer.pop();
                 return Ok(None);
             }
-            let incoming_report = ActionReport::from_message(&self.buffer[..index]);
+
+            let incoming_report = ActionReport::from_message(&self.buffer[..index])
+                .context(CouldNotDeserializeMessageSnafu)?;
             for _ in 0..=index {
                 self.buffer.pop();
             }
