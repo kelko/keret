@@ -1,26 +1,22 @@
+use crate::domain::AppMode;
 use tiny_led_matrix::Render;
-
-type Instant = u64;
-
-#[derive(Debug, Copy, Clone, Default, PartialEq)]
-pub(crate) enum AppMode {
-    #[default]
-    Idle,
-    Running(Instant),
-    Sending,
-    Error,
-    Fatal,
-}
 
 impl Render for AppMode {
     fn brightness_at(&self, x: usize, y: usize) -> u8 {
         match self {
             AppMode::Idle => IDLE_SPRITE[y][x],
             AppMode::Running(_) => RUNNING_SPRITE[y][x],
-            AppMode::Sending => SENDING_SPRITE[y][x],
             AppMode::Error => ERROR_SPRITE[y][x],
-            AppMode::Fatal => FATAL_SPRITE[y][x],
         }
+    }
+}
+
+#[repr(transparent)]
+pub(crate) struct DisplayMode([[u8; 5]; 5]);
+
+impl Render for DisplayMode {
+    fn brightness_at(&self, x: usize, y: usize) -> u8 {
+        self.0[y][x]
     }
 }
 
@@ -40,14 +36,6 @@ const RUNNING_SPRITE: [[u8; 5]; 5] = [
     [0, 5, 0, 0, 0],
 ];
 
-const SENDING_SPRITE: [[u8; 5]; 5] = [
-    [0, 0, 5, 0, 0],
-    [0, 5, 5, 5, 0],
-    [5, 0, 5, 0, 5],
-    [0, 0, 5, 0, 0],
-    [0, 0, 5, 0, 0],
-];
-
 const ERROR_SPRITE: [[u8; 5]; 5] = [
     [5, 5, 5, 5, 5],
     [0, 5, 5, 5, 0],
@@ -56,10 +44,10 @@ const ERROR_SPRITE: [[u8; 5]; 5] = [
     [0, 0, 5, 0, 0],
 ];
 
-const FATAL_SPRITE: [[u8; 5]; 5] = [
+pub(crate) const FATAL_SPRITE: DisplayMode = DisplayMode([
     [5, 0, 0, 0, 5],
     [0, 5, 0, 5, 0],
     [0, 0, 5, 0, 0],
     [0, 5, 0, 5, 0],
     [5, 0, 0, 0, 5],
-];
+]);

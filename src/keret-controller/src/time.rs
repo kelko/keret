@@ -1,76 +1,67 @@
 use crate::error::{ClockInitializationFailedSnafu, Error};
-use core::cell::RefCell;
-use cortex_m::interrupt::{free, Mutex};
-use microbit::hal::rtc::RtcCompareReg;
 use microbit::{
     hal::rtc::RtcInterrupt,
+    hal::rtc::{Instance, RtcCompareReg},
     hal::{Clocks, Rtc},
-    pac::{self, interrupt, CLOCK, RTC1},
+    pac::{self, CLOCK},
 };
 
-static RTC_TIMER: Mutex<RefCell<Option<Rtc<RTC1>>>> = Mutex::new(RefCell::new(None));
-static PERIOD: Mutex<RefCell<u32>> = Mutex::new(RefCell::new(0));
+pub(crate) struct RunningTimer<T> {
+    rtc_timer: Rtc<T>,
+    period: u32,
+}
 
-pub(crate) fn init_time(clock: CLOCK, rtc: RTC1) -> Result<(), Error> {
-    Clocks::new(clock).start_lfclk();
+impl<T: Instance> RunningTimer<T> {
+    pub(crate) fn new(clock: CLOCK, rtc_component: T) -> Result<Self, Error> {
+        Clocks::new(clock).start_lfclk();
 
-    let Ok(mut rtc1) = Rtc::new(rtc, 0) else {
-        return ClockInitializationFailedSnafu.fail();
-    };
+        let Ok(mut rtc) = Rtc::new(rtc_component, 0) else {
+            return ClockInitializationFailedSnafu.fail();
+        };
 
-    if rtc1.set_compare(RtcCompareReg::Compare3, 0x800000).is_err() {
-        return ClockInitializationFailedSnafu.fail();
-    }
+        if rtc.set_compare(RtcCompareReg::Compare3, 0x800000).is_err() {
+            return ClockInitializationFailedSnafu.fail();
+        }
 
-    rtc1.enable_event(RtcInterrupt::Overflow);
-    rtc1.enable_interrupt(RtcInterrupt::Overflow, None);
-    rtc1.enable_event(RtcInterrupt::Compare3);
-    rtc1.enable_interrupt(RtcInterrupt::Compare3, None);
-    rtc1.clear_counter();
-    rtc1.enable_counter();
+        rtc.enable_event(RtcInterrupt::Overflow);
+        rtc.enable_interrupt(RtcInterrupt::Overflow, None);
+        rtc.enable_event(RtcInterrupt::Compare3);
+        rtc.enable_interrupt(RtcInterrupt::Compare3, None);
+        rtc.clear_counter();
+        rtc.enable_counter();
 
-    while rtc1.get_counter() != 0 {}
-
-    free(move |cs| {
-        *RTC_TIMER.borrow(cs).borrow_mut() = Some(rtc1);
-
+        while rtc.get_counter() != 0 {}
         unsafe {
             pac::NVIC::unmask(pac::Interrupt::RTC1);
         }
-    });
 
-    Ok(())
+        Ok(Self {
+            rtc_timer: rtc,
+            period: 0,
+        })
+    }
+
+    #[inline(always)]
+    pub(crate) fn now(&mut self) -> u64 {
+        let current_value = self.rtc_timer.get_counter();
+
+        construct_ticks(self.period, current_value) / 32768
+    }
+
+    pub(crate) fn tick_timer(&mut self) {
+        let rtc = &self.rtc_timer;
+        if rtc.is_event_triggered(RtcInterrupt::Overflow) {
+            rtc.reset_event(RtcInterrupt::Overflow);
+        }
+
+        if rtc.is_event_triggered(RtcInterrupt::Compare3) {
+            rtc.reset_event(RtcInterrupt::Compare3);
+        }
+        self.period += 1;
+    }
 }
 
+#[inline(always)]
 fn construct_ticks(period: u32, counter: u32) -> u64 {
     ((period as u64) << 23) + ((counter ^ ((period & 1) << 23)) as u64)
-}
-
-pub(crate) fn now() -> Option<u64> {
-    let (period, current_value) = free(|cs| {
-        let p = *PERIOD.borrow(cs).borrow();
-
-        let timer = RTC_TIMER.borrow(cs).borrow_mut();
-        let v = timer.as_ref().map(|rtc| rtc.get_counter());
-
-        (p, v)
-    });
-
-    current_value.map(|v| construct_ticks(period, v) / 32768)
-}
-
-#[interrupt]
-unsafe fn RTC1() {
-    free(|cs| {
-        if let Some(rtc) = RTC_TIMER.borrow(cs).borrow_mut().as_mut() {
-            if rtc.is_event_triggered(RtcInterrupt::Overflow) {
-                rtc.reset_event(RtcInterrupt::Overflow);
-            }
-
-            if rtc.is_event_triggered(RtcInterrupt::Compare3) {
-                rtc.reset_event(RtcInterrupt::Compare3);
-            }
-            PERIOD.borrow(cs).replace_with(|x| *x + 1);
-        }
-    })
 }

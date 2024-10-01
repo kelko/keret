@@ -1,5 +1,6 @@
 use core::fmt::{Debug, Display, Formatter};
-use snafu::Snafu;
+use rtt_target::rprintln;
+use snafu::{Error as _, Snafu};
 
 /// compatibility wrapper until core::error is used everywhere
 pub struct UarteError(microbit::hal::uarte::Error);
@@ -40,6 +41,22 @@ pub(crate) enum Error {
     IncoherentTimestamps { start: u64, end: u64 },
     #[snafu(display("Failed to initialize the clock"))]
     ClockInitializationFailed,
-    #[snafu(display("Could not read now() from the timer"))]
+    #[snafu(display("No timer initialized to read the time from"))]
     NoTimer,
+    #[snafu(display("No controls initialized to read requested interaction from"))]
+    NoControls,
+}
+
+pub(crate) fn report_error(err: Error) {
+    rprintln!("[ERROR] {}", err);
+    let mut source = err.source();
+
+    if source.is_some() {
+        rprintln!("[CAUSE]:");
+    }
+    while let Some(inner) = source {
+        rprintln!("{}", inner);
+
+        source = inner.source();
+    }
 }

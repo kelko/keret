@@ -1,38 +1,27 @@
-use core::cell::RefCell;
-use cortex_m::interrupt::{free, Mutex};
-use microbit::display::nonblocking::Display;
-use microbit::gpio::DisplayPins;
-use microbit::pac;
-use microbit::pac::{interrupt, TIMER1};
+use microbit::{
+    display::nonblocking::Display as NonblockDisplay, gpio::DisplayPins, hal::timer::Instance, pac,
+};
 use tiny_led_matrix::Render;
 
-static DISPLAY: Mutex<RefCell<Option<Display<TIMER1>>>> = Mutex::new(RefCell::new(None));
+#[repr(transparent)]
+pub(crate) struct Display<T: Instance> {
+    inner: NonblockDisplay<T>,
+}
 
-pub(crate) fn init_display(board_timer: TIMER1, board_display: DisplayPins) {
-    let display = Display::new(board_timer, board_display);
+impl<T: Instance> Display<T> {
+    pub(crate) fn new(board_timer: T, board_display: DisplayPins) -> Self {
+        let display = NonblockDisplay::new(board_timer, board_display);
 
-    free(move |cs| {
-        *DISPLAY.borrow(cs).borrow_mut() = Some(display);
-    });
-    unsafe {
-        pac::NVIC::unmask(pac::Interrupt::TIMER1)
+        unsafe { pac::NVIC::unmask(pac::Interrupt::TIMER1) }
+
+        Self { inner: display }
     }
-}
 
-/// Display an image.
-pub(crate) fn display_image(image: &impl Render) {
-    free(|cs| {
-        if let Some(display) = DISPLAY.borrow(cs).borrow_mut().as_mut() {
-            display.show(image);
-        }
-    })
-}
+    pub(crate) fn display_image(&mut self, image: &impl Render) {
+        self.inner.show(image);
+    }
 
-#[interrupt]
-fn TIMER1() {
-    free(|cs| {
-        if let Some(display) = DISPLAY.borrow(cs).borrow_mut().as_mut() {
-            display.handle_display_event();
-        }
-    })
+    pub(crate) fn handle_display_event(&mut self) {
+        self.inner.handle_display_event();
+    }
 }
