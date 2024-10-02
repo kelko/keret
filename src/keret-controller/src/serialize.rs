@@ -6,12 +6,14 @@ use microbit::{
 };
 use snafu::ResultExt;
 
+/// convenience abstraction of the BSP serial bus
 #[repr(transparent)]
 pub(crate) struct SerialBus<T> {
     serial: Uarte<T>,
 }
 
 impl<T: Instance> SerialBus<T> {
+    /// create a new instance and configure the UARTE-based serial bus
     pub(crate) fn new(board_uarte: T, pins: UartPins) -> Self {
         let serial = Uarte::new(
             board_uarte,
@@ -23,6 +25,7 @@ impl<T: Instance> SerialBus<T> {
         Self { serial }
     }
 
+    /// send the duration as message via the serial bus
     pub(crate) fn serialize_message(&mut self, duration: u64) -> Result<(), Error> {
         let report = ActionReport::new(duration);
         let serialized_message = report.as_message().context(DeserializeMessageFailedSnafu)?;

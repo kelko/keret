@@ -8,6 +8,7 @@ use microbit::hal::uarte::Instance;
 
 type Instant = u64;
 
+/// current state of the application logic (the "domain")
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub(crate) enum AppMode {
     #[default]
@@ -17,6 +18,7 @@ pub(crate) enum AppMode {
 }
 
 impl AppMode {
+    /// check what interaction the user requested to perform and calculate next state from that
     pub(crate) fn handle_interaction_request<T: Instance>(
         &self,
         request: InteractionRequest,
@@ -36,8 +38,10 @@ impl AppMode {
         }
     }
 
+    /// user hit right button -> toggle between idle & running if possible
+    /// sending the report over the serial bus if necessary
     #[inline(always)]
-    pub(crate) fn toggle_mode<T: Instance>(
+    fn toggle_mode<T: Instance>(
         &self,
         serial_bus: &mut SerialBus<T>,
         timestamp: u64,
@@ -49,6 +53,7 @@ impl AppMode {
         }
     }
 
+    /// user ended the timer, calculate duration and send it over the wire
     fn finish_report<T: Instance>(
         &self,
         serial_bus: &mut SerialBus<T>,
