@@ -15,13 +15,11 @@ mod serialize;
 mod time;
 
 // importing elements (modules, structs, traits, ...) from other modules to be used in this file
-use crate::domain::InteractionRequest;
 use crate::{
     controls::InputControls,
     display::Display,
-    domain::AppMode,
-    error::report_error,
-    error::{Error, NoControlsSnafu},
+    domain::{AppMode, ApplicationService},
+    error::{report_error, Error},
     render::FATAL_SPRITE,
     serialize::SerialBus,
     time::RunningTimer,
@@ -34,9 +32,10 @@ use cortex_m::{
 use cortex_m_rt::entry;
 use microbit::{
     board::Board,
-    hal::timer::{Instance as TimerInstance, Periodic},
-    hal::uarte::Instance as UarteInstance,
-    hal::Timer,
+    hal::{
+        timer::{Instance, Periodic},
+        Timer,
+    },
     pac::{interrupt, Interrupt, NVIC, RTC1, TIMER0, TIMER1, UARTE0},
 };
 use panic_rtt_target as _;
@@ -70,19 +69,22 @@ fn main() -> ! {
     };
 
     let mut mode = AppMode::Idle;
-    let (mut serial_bus, mut main_loop_timer) = initialize_board(board);
+    let (mut app_service, mut main_loop_timer) = initialize_app_service(board);
 
     // main execution loop, should never end
     loop {
-        mode = next_cycle(&mode, &mut serial_bus).unwrap_or_else(handle_runtime_error);
-        show_mode(&mode);
-
+        mode = app_service.next_cycle(&mode);
         main_loop_timer.delay_ms(500_u32);
     }
 }
 
 /// initialize the board, creating all helper objects and put those necessary in the Mutexes
-fn initialize_board(board: Board) -> (SerialBus<UARTE0>, Timer<TIMER0, Periodic>) {
+fn initialize_app_service(
+    board: Board,
+) -> (
+    ApplicationService<RTC1, TIMER1, UARTE0>,
+    Timer<TIMER0, Periodic>,
+) {
     let mut display = Display::new(board.TIMER1, board.display_pins);
     display.display_image(&AppMode::Idle);
 
@@ -111,64 +113,14 @@ fn initialize_board(board: Board) -> (SerialBus<UARTE0>, Timer<TIMER0, Periodic>
         *RUNNING_TIMER.borrow(cs).borrow_mut() = Some(running_timer);
     });
 
-    (serial_bus, main_loop_timer)
-}
-
-/// calculate the next state in the next processing cycle:
-/// check what the user requested to do (by clicking on buttons) and
-/// let domain layer calculate the next state based on this input
-fn next_cycle<T: UarteInstance>(
-    mode: &AppMode,
-    serial_bus: &mut SerialBus<T>,
-) -> Result<AppMode, Error> {
-    let request = get_requested_interaction()?;
-    mode.handle_interaction_request(request, now(), serial_bus)
-}
-
-/// convenience method to read the current "running time" from the static timer object
-#[inline(always)]
-fn now() -> Option<u64> {
-    free(|cs| {
-        RUNNING_TIMER
-            .borrow(cs)
-            .borrow_mut()
-            .as_mut()
-            .map(|timer| timer.now())
-    })
-}
-
-/// convenience wrapper to read the user interaction from the static controls object
-fn get_requested_interaction() -> Result<InteractionRequest, Error> {
-    free(|cs| {
-        if let Some(controls) = CONTROLS.borrow(cs).borrow_mut().as_mut() {
-            Ok(controls.get_requested_interaction())
-        } else {
-            NoControlsSnafu.fail()
-        }
-    })
-}
-
-/// convenience method to show the correct sprite for current mode on the display
-fn show_mode(mode: &AppMode) {
-    free(|cs| {
-        let mut display = DISPLAY.borrow(cs).borrow_mut();
-        let display = display
-            .as_mut()
-            .expect("Display must be set at this point. Need restart");
-
-        display.display_image(mode);
-    });
-}
-
-/// report an error that happened while executing the main loop
-/// and switch the AppMode appropriately to indicate it's in a failure state
-fn handle_runtime_error(err: Error) -> AppMode {
-    report_error(err);
-    AppMode::Error
+    (
+        ApplicationService::new(&RUNNING_TIMER, &DISPLAY, &CONTROLS, serial_bus),
+        main_loop_timer,
+    )
 }
 
 /// report an error that happened during initialization, don't even go into the main loop
-fn handle_init_error<T: TimerInstance>(mut display: Display<T>, err: Error) -> ! {
+fn handle_init_error<T: Instance>(mut display: Display<T>, err: Error) -> ! {
     display.display_image(&FATAL_SPRITE);
     report_error(err);
 
