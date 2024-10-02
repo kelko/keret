@@ -6,31 +6,31 @@ use crate::{
 use core::cell::RefCell;
 use cortex_m::interrupt::{free, CriticalSection, Mutex};
 
-pub(crate) struct ApplicationService<TClock, TDisplay, TUserInterface, TSerialBus>
+pub(crate) struct ApplicationService<'a, TClock, TDisplay, TUserInterface, TSerialBus>
 where
-    TClock: RunningTimeClock + 'static,
-    TDisplay: Display + 'static,
-    TUserInterface: UserInterface + 'static,
-    TSerialBus: SerialBus + 'static,
+    TClock: RunningTimeClock + 'a,
+    TDisplay: Display + 'a,
+    TUserInterface: UserInterface + 'a,
+    TSerialBus: SerialBus + 'a,
 {
-    running_timer: &'static Mutex<RefCell<Option<TClock>>>,
-    display: &'static Mutex<RefCell<Option<TDisplay>>>,
-    controls: &'static Mutex<RefCell<Option<TUserInterface>>>,
+    running_timer: &'a Mutex<RefCell<Option<TClock>>>,
+    display: &'a Mutex<RefCell<Option<TDisplay>>>,
+    controls: &'a Mutex<RefCell<Option<TUserInterface>>>,
     serial_bus: TSerialBus,
 }
 
-impl<TClock, TDisplay, TUserInterface, TSerialBus>
-    ApplicationService<TClock, TDisplay, TUserInterface, TSerialBus>
+impl<'a, TClock, TDisplay, TUserInterface, TSerialBus>
+    ApplicationService<'a, TClock, TDisplay, TUserInterface, TSerialBus>
 where
-    TClock: RunningTimeClock + 'static,
-    TDisplay: Display + 'static,
-    TUserInterface: UserInterface + 'static,
-    TSerialBus: SerialBus + 'static,
+    TClock: RunningTimeClock + 'a,
+    TDisplay: Display + 'a,
+    TUserInterface: UserInterface + 'a,
+    TSerialBus: SerialBus + 'a,
 {
     pub(crate) fn new(
-        running_timer: &'static Mutex<RefCell<Option<TClock>>>,
-        display: &'static Mutex<RefCell<Option<TDisplay>>>,
-        controls: &'static Mutex<RefCell<Option<TUserInterface>>>,
+        running_timer: &'a Mutex<RefCell<Option<TClock>>>,
+        display: &'a Mutex<RefCell<Option<TDisplay>>>,
+        controls: &'a Mutex<RefCell<Option<TUserInterface>>>,
         serial_bus: TSerialBus,
     ) -> Self {
         Self {

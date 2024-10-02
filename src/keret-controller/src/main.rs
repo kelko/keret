@@ -77,10 +77,10 @@ fn main() -> ! {
 }
 
 /// initialize the board, creating all helper objects and put those necessary in the Mutexes
-fn initialize_app_service(
+fn initialize_app_service<'a>(
     board: Board,
 ) -> (
-    ApplicationService<RunningTimer<RTC1>, Display<TIMER1>, InputControls, SerialBus<UARTE0>>,
+    ApplicationService<'a, RunningTimer<RTC1>, Display<TIMER1>, InputControls, SerialBus<UARTE0>>,
     Timer<TIMER0, Periodic>,
 ) {
     let mut display = Display::new(board.TIMER1, board.display_pins);
