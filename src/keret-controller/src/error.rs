@@ -1,3 +1,4 @@
+use crate::domain::Instant;
 use core::fmt::{Debug, Display, Formatter};
 use rtt_target::rprintln;
 use snafu::{Error as _, Snafu};
@@ -45,7 +46,7 @@ pub(crate) enum Error {
         source: keret_controller_transmit::Error,
     },
     #[snafu(display("Incoherent timestamps. Started at {start} & ended at {end}"))]
-    IncoherentTimestamps { start: u64, end: u64 },
+    IncoherentTimestamps { start: Instant, end: Instant },
     #[snafu(display("Failed to initialize the clock"))]
     ClockInitializationFailed,
     #[snafu(display("No timer initialized to read the time from"))]

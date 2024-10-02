@@ -15,8 +15,9 @@ mod serialize;
 mod time;
 
 // importing elements (modules, structs, traits, ...) from other modules to be used in this file
+use crate::domain::InteractionRequest;
 use crate::{
-    controls::{InputControls, InteractionRequest},
+    controls::InputControls,
     display::Display,
     domain::AppMode,
     error::report_error,
@@ -40,7 +41,6 @@ use microbit::{
 };
 use panic_rtt_target as _;
 use rtt_target::rtt_init_print;
-
 // the following three variables are static, as they need to be accessed
 // by the main running code but also by the interrupts
 // as both could happen concurrently they are wrapped in a `Mutex` allowing only one

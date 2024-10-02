@@ -1,14 +1,5 @@
+use crate::domain::InteractionRequest;
 use microbit::{board::Buttons, hal::gpiote::Gpiote, pac};
-
-/// enum to indicate the users desired interaction
-/// which is calculated by which button was pressed
-#[derive(Debug, Copy, Clone, Default)]
-pub(crate) enum InteractionRequest {
-    #[default]
-    None,
-    ToggleMode,
-    Reset,
-}
 
 /// reading and interpreting the button presses to calculate requested interaction
 pub(crate) struct InputControls {
