@@ -1,5 +1,5 @@
 use crate::{
-    domain::model::{Duration, Instant, InteractionRequest},
+    domain::model::{Instant, InteractionRequest, ResultMessage},
     error::Error,
 };
 use tiny_led_matrix::Render;
@@ -9,7 +9,7 @@ pub(crate) trait RunningTimeClock {
 }
 
 pub(crate) trait SerialBus {
-    fn serialize_message(&mut self, duration: Duration) -> Result<(), Error>;
+    fn serialize_message(&mut self, message: ResultMessage) -> Result<(), Error>;
 }
 
 pub(crate) trait Display {

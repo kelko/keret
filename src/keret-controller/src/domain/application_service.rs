@@ -1,3 +1,4 @@
+use crate::domain::model::StateUpdateResult;
 use crate::{
     domain::{
         model::{AppMode, Instant, InteractionRequest},
@@ -58,7 +59,14 @@ where
     /// let domain layer calculate the next state based on this input
     fn calculate_next_state(&mut self, mode: &AppMode) -> Result<AppMode, Error> {
         let (request, time) = free(|cs| (self.get_requested_interaction(cs), self.now(cs)));
-        mode.handle_interaction_request(request?, time, &mut self.serial_bus)
+        let StateUpdateResult { mode, message } =
+            mode.handle_interaction_request(request?, time)?;
+
+        if let Some(message) = message {
+            self.serial_bus.serialize_message(message)?;
+        }
+
+        Ok(mode)
     }
 
     /// convenience method to read the current "running time" from the static timer object

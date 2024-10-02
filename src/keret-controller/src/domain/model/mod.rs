@@ -15,3 +15,43 @@ pub(crate) enum InteractionRequest {
     ToggleMode,
     Reset,
 }
+
+pub(crate) struct StateUpdateResult {
+    pub(crate) mode: AppMode,
+    pub(crate) message: Option<ResultMessage>,
+}
+
+impl StateUpdateResult {
+    #[inline]
+    fn new(mode: AppMode) -> Self {
+        Self {
+            mode,
+            message: None,
+        }
+    }
+
+    #[inline]
+    fn with_message(mode: AppMode, message: ResultMessage) -> Self {
+        Self {
+            mode,
+            message: Some(message),
+        }
+    }
+}
+
+#[repr(transparent)]
+pub(crate) struct ResultMessage(pub Duration);
+
+impl From<Duration> for ResultMessage {
+    #[inline]
+    fn from(value: Duration) -> Self {
+        Self(value)
+    }
+}
+
+impl Into<u64> for ResultMessage {
+    #[inline]
+    fn into(self) -> u64 {
+        self.0.into()
+    }
+}

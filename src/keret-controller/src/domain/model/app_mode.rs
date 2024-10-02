@@ -1,8 +1,6 @@
+use crate::domain::model::StateUpdateResult;
 use crate::{
-    domain::{
-        model::{Instant, InteractionRequest},
-        port::SerialBus,
-    },
+    domain::model::{Instant, InteractionRequest},
     error::{Error, IncoherentTimestampsSnafu, NoTimerSnafu},
 };
 
@@ -17,47 +15,41 @@ pub(crate) enum AppMode {
 
 impl AppMode {
     /// check what interaction the user requested to perform and calculate next state from that
-    pub(crate) fn handle_interaction_request<TSerialBus: SerialBus>(
+    pub(crate) fn handle_interaction_request(
         &self,
         request: InteractionRequest,
         now: Option<impl Into<Instant>>,
-        serial_bus: &mut TSerialBus,
-    ) -> Result<Self, Error> {
+    ) -> Result<StateUpdateResult, Error> {
         match request {
             InteractionRequest::ToggleMode => {
                 let Some(timestamp) = now else {
                     return NoTimerSnafu.fail();
                 };
 
-                self.toggle_mode(serial_bus, timestamp.into())
+                self.toggle_mode(timestamp.into())
             }
-            InteractionRequest::Reset => Ok(AppMode::Idle),
-            InteractionRequest::None => Ok(*self),
+            InteractionRequest::Reset => Ok(StateUpdateResult::new(AppMode::Idle)),
+            InteractionRequest::None => Ok(StateUpdateResult::new(*self)),
         }
     }
 
     /// user hit right button -> toggle between idle & running if possible
     /// sending the report over the serial bus if necessary
     #[inline(always)]
-    fn toggle_mode<TSerialBus: SerialBus>(
-        &self,
-        serial_bus: &mut TSerialBus,
-        timestamp: Instant,
-    ) -> Result<AppMode, Error> {
+    fn toggle_mode(&self, timestamp: Instant) -> Result<StateUpdateResult, Error> {
         match self {
-            AppMode::Idle => Ok(AppMode::Running(timestamp)),
-            AppMode::Running(start) => self.finish_report(serial_bus, start, timestamp),
-            AppMode::Error => Ok(*self),
+            AppMode::Idle => Ok(StateUpdateResult::new(AppMode::Running(timestamp))),
+            AppMode::Running(start) => self.finish_report(start, timestamp),
+            AppMode::Error => Ok(StateUpdateResult::new(*self)),
         }
     }
 
     /// user ended the timer, calculate duration and send it over the wire
-    fn finish_report<TSerialBus: SerialBus>(
+    fn finish_report(
         &self,
-        serial_bus: &mut TSerialBus,
         start_timestamp: &Instant,
         end_timestamp: Instant,
-    ) -> Result<AppMode, Error> {
+    ) -> Result<StateUpdateResult, Error> {
         if start_timestamp > &end_timestamp {
             return IncoherentTimestampsSnafu {
                 start: *start_timestamp,
@@ -67,8 +59,9 @@ impl AppMode {
         }
 
         let duration = end_timestamp - *start_timestamp;
-        serial_bus.serialize_message(duration)?;
-
-        Ok(AppMode::Idle)
+        Ok(StateUpdateResult::with_message(
+            AppMode::Idle,
+            duration.into(),
+        ))
     }
 }
