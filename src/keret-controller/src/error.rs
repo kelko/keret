@@ -1,4 +1,4 @@
-use crate::domain::Instant;
+use crate::domain::model::Instant;
 use core::fmt::{Debug, Display, Formatter};
 use rtt_target::rprintln;
 use snafu::{Error as _, Snafu};

@@ -1,4 +1,4 @@
-use crate::domain::AppMode;
+use crate::domain::model::AppMode;
 use tiny_led_matrix::Render;
 
 /// mapping of an domain AppMode to the sprite that shall be shown on the display.

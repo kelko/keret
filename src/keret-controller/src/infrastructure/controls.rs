@@ -1,4 +1,4 @@
-use crate::domain::{InteractionRequest, UserInterface};
+use crate::domain::{model::InteractionRequest, port::UserInterface};
 use microbit::{board::Buttons, hal::gpiote::Gpiote, pac};
 
 /// reading and interpreting the button presses to calculate requested interaction

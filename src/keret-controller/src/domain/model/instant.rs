@@ -1,4 +1,4 @@
-use crate::domain::Duration;
+use crate::domain::model::Duration;
 use core::fmt::{Display, Formatter};
 use core::ops::Sub;
 

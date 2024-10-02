@@ -1,6 +1,8 @@
 use crate::{
-    domain::{AppMode, InteractionRequest},
-    domain::{Display, Instant, RunningTimeClock, SerialBus, UserInterface},
+    domain::{
+        model::{AppMode, Instant, InteractionRequest},
+        port::{Display, RunningTimeClock, SerialBus, UserInterface},
+    },
     error::{report_error, Error, NoControlsSnafu},
 };
 use core::cell::RefCell;
@@ -27,6 +29,7 @@ where
     TUserInterface: UserInterface + 'a,
     TSerialBus: SerialBus + 'a,
 {
+    #[inline]
     pub(crate) fn new(
         running_timer: &'a Mutex<RefCell<Option<TClock>>>,
         display: &'a Mutex<RefCell<Option<TDisplay>>>,

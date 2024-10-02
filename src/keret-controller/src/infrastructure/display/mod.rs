@@ -26,7 +26,7 @@ impl<T: Instance> Display<T> {
     }
 }
 
-impl<T: Instance> crate::domain::Display for Display<T> {
+impl<T: Instance> crate::domain::port::Display for Display<T> {
     fn display_image(&mut self, image: &impl Render) {
         self.inner.show(image);
     }

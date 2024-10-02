@@ -12,7 +12,7 @@ mod infrastructure;
 // importing elements (modules, structs, traits, ...) from other modules to be used in this file
 
 use crate::{
-    domain::{AppMode, ApplicationService, Display as _},
+    domain::{model::AppMode, port::Display as _, ApplicationService},
     error::{report_error, Error},
     infrastructure::{
         controls::InputControls,
