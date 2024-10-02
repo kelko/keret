@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-snafu = "0.8.4"
-clap = { version = "4.5.17", features = ["derive"] }
-serialport = "4.5.0"
+snafu = "0.8"
+clap = { version = "4.5", features = ["derive"] }
+serialport = "4.5.1"
 keret-controller-transmit = { path = "../keret-controller-transmit" }
 keret-service-transmit = { path = "../keret-service-transmit" }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
