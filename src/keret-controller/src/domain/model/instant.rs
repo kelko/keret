@@ -1,6 +1,8 @@
 use crate::domain::model::Duration;
-use core::fmt::{Display, Formatter};
-use core::ops::Sub;
+use core::{
+    fmt::{Display, Formatter},
+    ops::Sub,
+};
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 #[repr(transparent)]

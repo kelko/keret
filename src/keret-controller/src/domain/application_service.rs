@@ -1,7 +1,6 @@
-use crate::domain::model::StateUpdateResult;
 use crate::{
     domain::{
-        model::{AppMode, Instant, InteractionRequest},
+        model::{AppMode, Instant, InteractionRequest, StateUpdateResult},
         port::{Display, RunningTimeClock, SerialBus, UserInterface},
     },
     error::{report_error, Error, NoControlsSnafu},

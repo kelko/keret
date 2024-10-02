@@ -1,6 +1,5 @@
-use crate::domain::model::StateUpdateResult;
 use crate::{
-    domain::model::{Instant, InteractionRequest},
+    domain::model::{Instant, InteractionRequest, StateUpdateResult},
     error::{Error, IncoherentTimestampsSnafu, NoTimerSnafu},
 };
 

@@ -2,6 +2,8 @@ mod app_mode;
 mod duration;
 mod instant;
 
+// re-export everything relevant from the submodules as if it was directly coded here
+// hides internal structure of the module
 pub(crate) use app_mode::AppMode;
 pub(crate) use duration::Duration;
 pub(crate) use instant::Instant;

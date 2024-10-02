@@ -1,5 +1,7 @@
-use crate::domain::{model::Instant, port::RunningTimeClock};
-use crate::error::{ClockInitializationFailedSnafu, Error};
+use crate::{
+    domain::{model::Instant, port::RunningTimeClock},
+    error::{ClockInitializationFailedSnafu, Error},
+};
 use microbit::{
     hal::rtc::RtcInterrupt,
     hal::rtc::{Instance, RtcCompareReg},
