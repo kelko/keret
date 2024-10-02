@@ -5,24 +5,21 @@
 //   so the "main" method is not indicator for code entry, but below you will find #[entry]
 //   also as there is no OS the Rust std lib can't be used, as it depends on libc/musl/something similar
 
-// the "modules" of this app (think "package"/"namespace") in other languages
-mod controls;
-mod display;
 mod domain;
 mod error;
-mod render;
-mod serialize;
-mod time;
+mod infrastructure;
 
 // importing elements (modules, structs, traits, ...) from other modules to be used in this file
+
 use crate::{
-    controls::InputControls,
-    display::Display,
-    domain::{AppMode, ApplicationService},
+    domain::{AppMode, ApplicationService, Display as _},
     error::{report_error, Error},
-    render::FATAL_SPRITE,
-    serialize::SerialBus,
-    time::RunningTimer,
+    infrastructure::{
+        controls::InputControls,
+        display::{Display, FATAL_SPRITE},
+        serialize::SerialBus,
+        time::RunningTimer,
+    },
 };
 use core::cell::RefCell;
 use cortex_m::{
@@ -40,6 +37,7 @@ use microbit::{
 };
 use panic_rtt_target as _;
 use rtt_target::rtt_init_print;
+
 // the following three variables are static, as they need to be accessed
 // by the main running code but also by the interrupts
 // as both could happen concurrently they are wrapped in a `Mutex` allowing only one
@@ -82,7 +80,7 @@ fn main() -> ! {
 fn initialize_app_service(
     board: Board,
 ) -> (
-    ApplicationService<RTC1, TIMER1, UARTE0>,
+    ApplicationService<RunningTimer<RTC1>, Display<TIMER1>, InputControls, SerialBus<UARTE0>>,
     Timer<TIMER0, Periodic>,
 ) {
     let mut display = Display::new(board.TIMER1, board.display_pins);

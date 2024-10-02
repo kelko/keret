@@ -1,4 +1,4 @@
-use crate::domain::InteractionRequest;
+use crate::domain::{InteractionRequest, UserInterface};
 use microbit::{board::Buttons, hal::gpiote::Gpiote, pac};
 
 /// reading and interpreting the button presses to calculate requested interaction
@@ -32,15 +32,6 @@ impl InputControls {
         }
     }
 
-    /// return the last requested interaction and set it next to `None`
-    #[inline(always)]
-    pub(crate) fn get_requested_interaction(&mut self) -> InteractionRequest {
-        let current = self.request;
-        self.request = InteractionRequest::None;
-
-        current
-    }
-
     /// check the button channels to see which button was pressed and
     /// calculate the next interaction request, reset the buttons afterward
     pub(crate) fn check_input(&mut self) {
@@ -59,5 +50,15 @@ impl InputControls {
         self.gpiote.channel1().reset_events();
 
         self.request = request;
+    }
+}
+
+impl UserInterface for InputControls {
+    /// return the last requested interaction and set it next to `None`
+    fn get_requested_interaction(&mut self) -> InteractionRequest {
+        let current = self.request;
+        self.request = InteractionRequest::None;
+
+        current
     }
 }

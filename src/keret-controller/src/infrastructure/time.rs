@@ -1,3 +1,4 @@
+use crate::domain::{Instant, RunningTimeClock};
 use crate::error::{ClockInitializationFailedSnafu, Error};
 use microbit::{
     hal::rtc::RtcInterrupt,
@@ -50,15 +51,6 @@ impl<T: Instance> RunningTimer<T> {
         })
     }
 
-    /// calculates the current running time
-    /// using the periods + current tick count
-    #[inline(always)]
-    pub(crate) fn now(&mut self) -> u64 {
-        let current_value = self.rtc_timer.get_counter();
-
-        construct_ticks(self.period, current_value) / 32768
-    }
-
     /// handle a interrupt from the RTC (overflow or half-mark)
     pub(crate) fn tick_timer(&mut self) {
         let rtc = &self.rtc_timer;
@@ -70,6 +62,17 @@ impl<T: Instance> RunningTimer<T> {
             rtc.reset_event(RtcInterrupt::Compare3);
         }
         self.period += 1;
+    }
+}
+
+impl<T: Instance> RunningTimeClock for RunningTimer<T> {
+    /// calculates the current running time
+    /// using the periods + current tick count
+    #[inline(always)]
+    fn now(&mut self) -> Instant {
+        let current_value = self.rtc_timer.get_counter();
+
+        (construct_ticks(self.period, current_value) / 32768).into()
     }
 }
 

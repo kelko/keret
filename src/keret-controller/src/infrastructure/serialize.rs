@@ -27,9 +27,11 @@ impl<T: Instance> SerialBus<T> {
 
         Self { serial }
     }
+}
 
+impl<T: Instance> crate::domain::SerialBus for SerialBus<T> {
     /// send the duration as message via the serial bus
-    pub(crate) fn serialize_message(&mut self, duration: Duration) -> Result<(), Error> {
+    fn serialize_message(&mut self, duration: Duration) -> Result<(), Error> {
         let report = ActionReport::new(duration.into());
         let serialized_message = report.as_message().context(DeserializeMessageFailedSnafu)?;
 

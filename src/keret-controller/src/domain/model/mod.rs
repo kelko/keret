@@ -4,12 +4,11 @@ mod instant;
 pub(crate) use duration::Duration;
 pub(crate) use instant::Instant;
 
+use crate::domain::SerialBus;
 use crate::{
     domain::InteractionRequest,
     error::{Error, IncoherentTimestampsSnafu, NoTimerSnafu},
-    serialize::SerialBus,
 };
-use microbit::hal::uarte::Instance;
 
 /// current state of the application logic (the "domain")
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
@@ -22,11 +21,11 @@ pub(crate) enum AppMode {
 
 impl AppMode {
     /// check what interaction the user requested to perform and calculate next state from that
-    pub(crate) fn handle_interaction_request<T: Instance>(
+    pub(crate) fn handle_interaction_request<TSerialBus: SerialBus>(
         &self,
         request: InteractionRequest,
         now: Option<impl Into<Instant>>,
-        serial_bus: &mut SerialBus<T>,
+        serial_bus: &mut TSerialBus,
     ) -> Result<Self, Error> {
         match request {
             InteractionRequest::ToggleMode => {
@@ -44,9 +43,9 @@ impl AppMode {
     /// user hit right button -> toggle between idle & running if possible
     /// sending the report over the serial bus if necessary
     #[inline(always)]
-    fn toggle_mode<T: Instance>(
+    fn toggle_mode<TSerialBus: SerialBus>(
         &self,
-        serial_bus: &mut SerialBus<T>,
+        serial_bus: &mut TSerialBus,
         timestamp: Instant,
     ) -> Result<AppMode, Error> {
         match self {
@@ -57,9 +56,9 @@ impl AppMode {
     }
 
     /// user ended the timer, calculate duration and send it over the wire
-    fn finish_report<T: Instance>(
+    fn finish_report<TSerialBus: SerialBus>(
         &self,
-        serial_bus: &mut SerialBus<T>,
+        serial_bus: &mut TSerialBus,
         start_timestamp: &Instant,
         end_timestamp: Instant,
     ) -> Result<AppMode, Error> {

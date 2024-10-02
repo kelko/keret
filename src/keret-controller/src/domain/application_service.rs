@@ -1,37 +1,37 @@
 use crate::{
-    controls::InputControls,
-    display::Display,
     domain::{AppMode, InteractionRequest},
+    domain::{Display, Instant, RunningTimeClock, SerialBus, UserInterface},
     error::{report_error, Error, NoControlsSnafu},
-    serialize::SerialBus,
-    time::RunningTimer,
 };
 use core::cell::RefCell;
 use cortex_m::interrupt::{free, CriticalSection, Mutex};
 
-pub(crate) struct ApplicationService<TRtc, TDisplayTimer, TUarte>
+pub(crate) struct ApplicationService<TClock, TDisplay, TUserInterface, TSerialBus>
 where
-    TDisplayTimer: microbit::hal::timer::Instance + 'static,
-    TRtc: 'static,
-    TUarte: 'static,
+    TClock: RunningTimeClock + 'static,
+    TDisplay: Display + 'static,
+    TUserInterface: UserInterface + 'static,
+    TSerialBus: SerialBus + 'static,
 {
-    running_timer: &'static Mutex<RefCell<Option<RunningTimer<TRtc>>>>,
-    display: &'static Mutex<RefCell<Option<Display<TDisplayTimer>>>>,
-    controls: &'static Mutex<RefCell<Option<InputControls>>>,
-    serial_bus: SerialBus<TUarte>,
+    running_timer: &'static Mutex<RefCell<Option<TClock>>>,
+    display: &'static Mutex<RefCell<Option<TDisplay>>>,
+    controls: &'static Mutex<RefCell<Option<TUserInterface>>>,
+    serial_bus: TSerialBus,
 }
 
-impl<TRtc, TDisplayTimer, TUarte> ApplicationService<TRtc, TDisplayTimer, TUarte>
+impl<TClock, TDisplay, TUserInterface, TSerialBus>
+    ApplicationService<TClock, TDisplay, TUserInterface, TSerialBus>
 where
-    TDisplayTimer: microbit::hal::timer::Instance + 'static,
-    TRtc: microbit::hal::rtc::Instance + 'static,
-    TUarte: microbit::hal::uarte::Instance + 'static,
+    TClock: RunningTimeClock + 'static,
+    TDisplay: Display + 'static,
+    TUserInterface: UserInterface + 'static,
+    TSerialBus: SerialBus + 'static,
 {
     pub(crate) fn new(
-        running_timer: &'static Mutex<RefCell<Option<RunningTimer<TRtc>>>>,
-        display: &'static Mutex<RefCell<Option<Display<TDisplayTimer>>>>,
-        controls: &'static Mutex<RefCell<Option<InputControls>>>,
-        serial_bus: SerialBus<TUarte>,
+        running_timer: &'static Mutex<RefCell<Option<TClock>>>,
+        display: &'static Mutex<RefCell<Option<TDisplay>>>,
+        controls: &'static Mutex<RefCell<Option<TUserInterface>>>,
+        serial_bus: TSerialBus,
     ) -> Self {
         Self {
             running_timer,
@@ -59,7 +59,7 @@ where
     }
 
     /// convenience method to read the current "running time" from the static timer object
-    fn now(&self, cs: &CriticalSection) -> Option<u64> {
+    fn now(&self, cs: &CriticalSection) -> Option<Instant> {
         self.running_timer
             .borrow(cs)
             .borrow_mut()

@@ -3,6 +3,10 @@ use microbit::{
 };
 use tiny_led_matrix::Render;
 
+mod sprites;
+
+pub(crate) use sprites::FATAL_SPRITE;
+
 /// convenience abstraction of the BSP display module
 #[repr(transparent)]
 pub(crate) struct Display<T: Instance> {
@@ -17,11 +21,13 @@ impl<T: Instance> Display<T> {
         Self { inner: display }
     }
 
-    pub(crate) fn display_image(&mut self, image: &impl Render) {
-        self.inner.show(image);
-    }
-
     pub(crate) fn handle_display_event(&mut self) {
         self.inner.handle_display_event();
+    }
+}
+
+impl<T: Instance> crate::domain::Display for Display<T> {
+    fn display_image(&mut self, image: &impl Render) {
+        self.inner.show(image);
     }
 }
