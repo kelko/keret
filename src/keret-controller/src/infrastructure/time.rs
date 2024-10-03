@@ -11,7 +11,7 @@ use microbit::{
 
 /// a timer to keep track of the overall running time of the microcontroller
 /// it uses an RTC, reading the current ticks + handles any overflow of the timer
-/// this way the timer can not only handle ~8 minutes (RTC overflow) but several years
+/// this way the timer can not only handle minutes to hours (RTC overflow) but several years
 /// majority of functionality is modeled after
 /// https://github.com/embassy-rs/embassy/blob/main/embassy-nrf/src/time_driver.rs
 pub(crate) struct RunningTimer<T> {
@@ -26,7 +26,7 @@ impl<T: Instance> RunningTimer<T> {
     pub(crate) fn new(clock: CLOCK, rtc_component: T) -> Result<Self, Error> {
         Clocks::new(clock).start_lfclk();
 
-        let Ok(mut rtc) = Rtc::new(rtc_component, 0) else {
+        let Ok(mut rtc) = Rtc::new(rtc_component, 511) else {
             return ClockInitializationFailedSnafu.fail();
         };
 
@@ -74,7 +74,7 @@ impl<T: Instance> RunningTimeClock for RunningTimer<T> {
     fn now(&mut self) -> Instant {
         let current_value = self.rtc_timer.get_counter();
 
-        (construct_ticks(self.period, current_value) / 32768).into()
+        (construct_ticks(self.period, current_value) / 64).into()
     }
 }
 
