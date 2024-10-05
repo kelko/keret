@@ -1,4 +1,7 @@
-use crate::error::{DeserializeMessageFailedSnafu, Error, WritingToSerialPortFailedSnafu};
+use crate::{
+    domain::model::TrackResult,
+    error::{DeserializeMessageFailedSnafu, Error, WritingToSerialPortFailedSnafu},
+};
 use keret_controller_transmit::ActionReport;
 use microbit::{
     board::UartPins,
@@ -25,9 +28,8 @@ impl<T: Instance> SerialBus<T> {
         Self { serial }
     }
 
-    /// send the duration as message via the serial bus
-    pub(crate) fn serialize_message(&mut self, duration: u64) -> Result<(), Error> {
-        let report = ActionReport::new(duration);
+    /// serialize the message and send if over the bus
+    fn send_report(&mut self, report: ActionReport) -> Result<(), Error> {
         let serialized_message = report.as_message().context(DeserializeMessageFailedSnafu)?;
 
         self.serial
@@ -41,5 +43,13 @@ impl<T: Instance> SerialBus<T> {
             .context(WritingToSerialPortFailedSnafu)?;
 
         Ok(())
+    }
+}
+
+impl<T: Instance> crate::domain::port::OutsideMessaging for SerialBus<T> {
+    /// send the duration as message via the serial bus
+    fn send_result(&mut self, result: TrackResult) -> Result<(), Error> {
+        let report = ActionReport::new(result.into());
+        self.send_report(report)
     }
 }

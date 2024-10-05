@@ -1,14 +1,5 @@
+use crate::domain::{model::InteractionRequest, port::UserInterface};
 use microbit::{board::Buttons, hal::gpiote::Gpiote, pac};
-
-/// enum to indicate the users desired interaction
-/// which is calculated by which button was pressed
-#[derive(Debug, Copy, Clone, Default)]
-pub(crate) enum InteractionRequest {
-    #[default]
-    None,
-    ToggleMode,
-    Reset,
-}
 
 /// reading and interpreting the button presses to calculate requested interaction
 pub(crate) struct InputControls {
@@ -41,15 +32,6 @@ impl InputControls {
         }
     }
 
-    /// return the last requested interaction and set it next to `None`
-    #[inline(always)]
-    pub(crate) fn get_requested_interaction(&mut self) -> InteractionRequest {
-        let current = self.request;
-        self.request = InteractionRequest::None;
-
-        current
-    }
-
     /// check the button channels to see which button was pressed and
     /// calculate the next interaction request, reset the buttons afterward
     pub(crate) fn check_input(&mut self) {
@@ -68,5 +50,15 @@ impl InputControls {
         self.gpiote.channel1().reset_events();
 
         self.request = request;
+    }
+}
+
+impl UserInterface for InputControls {
+    /// return the last requested interaction and set it next to `None`
+    fn requested_interaction(&mut self) -> InteractionRequest {
+        let current = self.request;
+        self.request = InteractionRequest::None;
+
+        current
     }
 }

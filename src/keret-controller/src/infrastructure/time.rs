@@ -1,4 +1,7 @@
-use crate::error::{ClockInitializationFailedSnafu, Error};
+use crate::{
+    domain::{model::Instant, port::RunningTimeClock},
+    error::{ClockInitializationFailedSnafu, Error},
+};
 use microbit::{
     hal::rtc::RtcInterrupt,
     hal::rtc::{Instance, RtcCompareReg},
@@ -8,7 +11,7 @@ use microbit::{
 
 /// a timer to keep track of the overall running time of the microcontroller
 /// it uses an RTC, reading the current ticks + handles any overflow of the timer
-/// this way the timer can not only handle ~8 minutes (RTC overflow) but several years
+/// this way the timer can not only handle minutes to hours (RTC overflow) but several years
 /// majority of functionality is modeled after
 /// https://github.com/embassy-rs/embassy/blob/main/embassy-nrf/src/time_driver.rs
 pub(crate) struct RunningTimer<T> {
@@ -23,7 +26,7 @@ impl<T: Instance> RunningTimer<T> {
     pub(crate) fn new(clock: CLOCK, rtc_component: T) -> Result<Self, Error> {
         Clocks::new(clock).start_lfclk();
 
-        let Ok(mut rtc) = Rtc::new(rtc_component, 0) else {
+        let Ok(mut rtc) = Rtc::new(rtc_component, 511) else {
             return ClockInitializationFailedSnafu.fail();
         };
 
@@ -50,15 +53,6 @@ impl<T: Instance> RunningTimer<T> {
         })
     }
 
-    /// calculates the current running time
-    /// using the periods + current tick count
-    #[inline(always)]
-    pub(crate) fn now(&mut self) -> u64 {
-        let current_value = self.rtc_timer.get_counter();
-
-        construct_ticks(self.period, current_value) / 32768
-    }
-
     /// handle a interrupt from the RTC (overflow or half-mark)
     pub(crate) fn tick_timer(&mut self) {
         let rtc = &self.rtc_timer;
@@ -70,6 +64,17 @@ impl<T: Instance> RunningTimer<T> {
             rtc.reset_event(RtcInterrupt::Compare3);
         }
         self.period += 1;
+    }
+}
+
+impl<T: Instance> RunningTimeClock for RunningTimer<T> {
+    /// calculates the current running time
+    /// using the periods + current tick count
+    #[inline(always)]
+    fn now(&mut self) -> Instant {
+        let current_value = self.rtc_timer.get_counter();
+
+        (construct_ticks(self.period, current_value) / 64).into()
     }
 }
 

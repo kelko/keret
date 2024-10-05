@@ -3,6 +3,11 @@ use microbit::{
 };
 use tiny_led_matrix::Render;
 
+mod sprites;
+
+use crate::domain::model::AppMode;
+pub(crate) use sprites::FATAL_SPRITE;
+
 /// convenience abstraction of the BSP display module
 #[repr(transparent)]
 pub(crate) struct Display<T: Instance> {
@@ -17,11 +22,22 @@ impl<T: Instance> Display<T> {
         Self { inner: display }
     }
 
-    pub(crate) fn display_image(&mut self, image: &impl Render) {
-        self.inner.show(image);
-    }
-
+    /// interrupt-triggered event handling inside the display
     pub(crate) fn handle_display_event(&mut self) {
         self.inner.handle_display_event();
+    }
+
+    /// display any kind of sprite
+    #[inline]
+    pub(crate) fn show_sprite(&mut self, sprite: &impl Render) {
+        self.inner.show(sprite);
+    }
+}
+
+impl<T: Instance> crate::domain::port::Display for Display<T> {
+    /// display a sprite associated with the given `AppMode`
+    #[inline]
+    fn show_mode(&mut self, app_mode: &AppMode) {
+        self.inner.show(app_mode);
     }
 }

@@ -1,0 +1,16 @@
+@HOST_ADDRESS = http://localhost:3000
+
+### GET request to example server
+GET {{HOST_ADDRESS}}/api/v1.0/report
+
+### POST a new report
+POST {{HOST_ADDRESS}}/api/v1.0/report
+Content-Type: application/json
+
+{
+  "timestamp": "1970-01-01T00:00:01.000Z",
+  "duration": {
+    "secs": 5,
+    "nanos": 0
+  }
+}
