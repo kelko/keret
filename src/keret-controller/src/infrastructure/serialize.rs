@@ -1,5 +1,5 @@
 use crate::{
-    domain::model::ResultMessage,
+    domain::model::TrackResult,
     error::{DeserializeMessageFailedSnafu, Error, WritingToSerialPortFailedSnafu},
 };
 use keret_controller_transmit::ActionReport;
@@ -27,12 +27,9 @@ impl<T: Instance> SerialBus<T> {
 
         Self { serial }
     }
-}
 
-impl<T: Instance> crate::domain::port::SerialBus for SerialBus<T> {
-    /// send the duration as message via the serial bus
-    fn serialize_message(&mut self, message: ResultMessage) -> Result<(), Error> {
-        let report = ActionReport::new(message.into());
+    /// serialize the message and send if over the bus
+    fn send_report(&mut self, report: ActionReport) -> Result<(), Error> {
         let serialized_message = report.as_message().context(DeserializeMessageFailedSnafu)?;
 
         self.serial
@@ -46,5 +43,13 @@ impl<T: Instance> crate::domain::port::SerialBus for SerialBus<T> {
             .context(WritingToSerialPortFailedSnafu)?;
 
         Ok(())
+    }
+}
+
+impl<T: Instance> crate::domain::port::OutsideMessaging for SerialBus<T> {
+    /// send the duration as message via the serial bus
+    fn send_result(&mut self, result: TrackResult) -> Result<(), Error> {
+        let report = ActionReport::new(result.into());
+        self.send_report(report)
     }
 }

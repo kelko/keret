@@ -4,10 +4,12 @@ use core::{
     ops::Sub,
 };
 
+/// timestamp in controller-local time
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 #[repr(transparent)]
 pub(crate) struct Instant(u64);
 
+// display the instant
 impl Display for Instant {
     #[inline(always)]
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
@@ -15,6 +17,7 @@ impl Display for Instant {
     }
 }
 
+// create the instant from a u64 timer value
 impl From<u64> for Instant {
     #[inline(always)]
     fn from(value: u64) -> Self {
@@ -22,6 +25,7 @@ impl From<u64> for Instant {
     }
 }
 
+// extract the u64 timestamp from the instant
 impl Into<u64> for &Instant {
     #[inline(always)]
     fn into(self) -> u64 {
@@ -29,6 +33,7 @@ impl Into<u64> for &Instant {
     }
 }
 
+// calculate different between 2 instances, creating a `Duration`
 impl Sub for Instant {
     type Output = Duration;
 

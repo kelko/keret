@@ -1,21 +1,29 @@
+use crate::domain::model::AppMode;
 use crate::{
-    domain::model::{Instant, InteractionRequest, ResultMessage},
+    domain::model::{Instant, InteractionRequest, TrackResult},
     error::Error,
 };
-use tiny_led_matrix::Render;
 
+/// Keep track of the running time, producing an ever-increasing, never resetting timestamp
 pub(crate) trait RunningTimeClock {
+    /// return the current timestamp
     fn now(&mut self) -> Instant;
 }
 
-pub(crate) trait SerialBus {
-    fn serialize_message(&mut self, message: ResultMessage) -> Result<(), Error>;
+/// Send domain-specific messages to the outside
+pub(crate) trait OutsideMessaging {
+    /// inform the outside of the time tracking result
+    fn send_result(&mut self, result: TrackResult) -> Result<(), Error>;
 }
 
+/// Show domain-specific content on the display
 pub(crate) trait Display {
-    fn display_image(&mut self, image: &impl Render);
+    /// display a sprite associated with the given `AppMode`
+    fn show_mode(&mut self, mode: &AppMode);
 }
 
+/// retrieve input from the user
 pub(crate) trait UserInterface {
-    fn get_requested_interaction(&mut self) -> InteractionRequest;
+    /// return the requested interface (as calculated from the inputs the user made)
+    fn requested_interaction(&mut self) -> InteractionRequest;
 }

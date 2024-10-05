@@ -1,3 +1,4 @@
+/// measure of how long an action took
 #[repr(transparent)]
 pub(crate) struct Duration(u64);
 

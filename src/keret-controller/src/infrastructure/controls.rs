@@ -55,7 +55,7 @@ impl InputControls {
 
 impl UserInterface for InputControls {
     /// return the last requested interaction and set it next to `None`
-    fn get_requested_interaction(&mut self) -> InteractionRequest {
+    fn requested_interaction(&mut self) -> InteractionRequest {
         let current = self.request;
         self.request = InteractionRequest::None;
 

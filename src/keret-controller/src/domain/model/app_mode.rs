@@ -6,9 +6,12 @@ use crate::{
 /// current state of the application logic (the "domain")
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub(crate) enum AppMode {
+    /// app currently does nothing except idling
     #[default]
     Idle,
+    /// the app has marked when time tracking started, waiting to finish it
     Running(Instant),
+    /// the app ran into a (recoverable) error in the main loop
     Error,
 }
 
@@ -17,7 +20,7 @@ impl AppMode {
     pub(crate) fn handle_interaction_request(
         &self,
         request: InteractionRequest,
-        now: Option<impl Into<Instant>>,
+        now: Option<Instant>,
     ) -> Result<StateUpdateResult, Error> {
         match request {
             InteractionRequest::ToggleMode => {
@@ -25,7 +28,7 @@ impl AppMode {
                     return NoTimerSnafu.fail();
                 };
 
-                self.toggle_mode(timestamp.into())
+                self.toggle_mode(timestamp)
             }
             InteractionRequest::Reset => Ok(StateUpdateResult::new(AppMode::Idle)),
             InteractionRequest::None => Ok(StateUpdateResult::new(*self)),

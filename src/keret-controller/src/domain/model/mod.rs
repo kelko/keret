@@ -18,12 +18,17 @@ pub(crate) enum InteractionRequest {
     Reset,
 }
 
+/// result of calculating the next state
 pub(crate) struct StateUpdateResult {
+    /// the mode the controller is next
     pub(crate) mode: AppMode,
-    pub(crate) message: Option<ResultMessage>,
+
+    /// a message to send (if necessary)
+    pub(crate) message: Option<TrackResult>,
 }
 
 impl StateUpdateResult {
+    /// create a new updated state, without a message
     #[inline]
     fn new(mode: AppMode) -> Self {
         Self {
@@ -32,8 +37,9 @@ impl StateUpdateResult {
         }
     }
 
+    /// create a new updated state and also include a message to be sent
     #[inline]
-    fn with_message(mode: AppMode, message: ResultMessage) -> Self {
+    fn with_message(mode: AppMode, message: TrackResult) -> Self {
         Self {
             mode,
             message: Some(message),
@@ -41,17 +47,20 @@ impl StateUpdateResult {
     }
 }
 
+/// the result of a time tracking action
 #[repr(transparent)]
-pub(crate) struct ResultMessage(pub Duration);
+pub(crate) struct TrackResult(pub Duration);
 
-impl From<Duration> for ResultMessage {
+// create a time tracking result using the given duration
+impl From<Duration> for TrackResult {
     #[inline]
     fn from(value: Duration) -> Self {
         Self(value)
     }
 }
 
-impl Into<u64> for ResultMessage {
+// extract the duration as u64
+impl Into<u64> for TrackResult {
     #[inline]
     fn into(self) -> u64 {
         self.0.into()

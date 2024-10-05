@@ -8,8 +8,11 @@
 mod domain;
 mod error;
 mod infrastructure;
-
 // importing elements (modules, structs, traits, ...) from other modules to be used in this file
+
+/// convenience type alias to make code shorter/more readable
+/// meant for those static values which exist once and used from interrupts and inside domain layer
+type Singleton<T> = Mutex<RefCell<Option<T>>>;
 
 use crate::{
     domain::{model::AppMode, port::Display as _, ApplicationService},
@@ -45,13 +48,13 @@ use rtt_target::rtt_init_print;
 // and in a `RefCell` so we can call mutable methods on it (so-called "inner mutability")
 
 /// the primary timer used to calculate the running time
-static RUNNING_TIMER: Mutex<RefCell<Option<RunningTimer<RTC1>>>> = Mutex::new(RefCell::new(None));
+static RUNNING_TIMER: Singleton<RunningTimer<RTC1>> = Mutex::new(RefCell::new(None));
 
 /// the display to show something on the LED matrix
-static DISPLAY: Mutex<RefCell<Option<Display<TIMER1>>>> = Mutex::new(RefCell::new(None));
+static DISPLAY: Singleton<Display<TIMER1>> = Mutex::new(RefCell::new(None));
 
 /// wrapper for input controls handling
-static CONTROLS: Mutex<RefCell<Option<InputControls>>> = Mutex::new(RefCell::new(None));
+static CONTROLS: Singleton<InputControls> = Mutex::new(RefCell::new(None));
 
 /// entry point for the application. Could have any name, `main` used to follow convention from C
 /// Initializes the controller as well as go into the execution loop. This method should never return
@@ -84,7 +87,7 @@ fn initialize_app_service<'a>(
     Timer<TIMER0, Periodic>,
 ) {
     let mut display = Display::new(board.TIMER1, board.display_pins);
-    display.display_image(&AppMode::Idle);
+    display.show_mode(&AppMode::Idle);
 
     let controls = InputControls::new(board.GPIOTE, board.buttons);
     let serial_bus = SerialBus::new(board.UARTE0, board.uart);
@@ -119,7 +122,7 @@ fn initialize_app_service<'a>(
 
 /// report an error that happened during initialization, don't even go into the main loop
 fn handle_init_error<T: Instance>(mut display: Display<T>, err: Error) -> ! {
-    display.display_image(&FATAL_SPRITE);
+    display.show_sprite(&FATAL_SPRITE);
     report_error(err);
 
     loop {
