@@ -5,7 +5,7 @@
 //   so the "main" method is not indicator for code entry, but below you will find #[entry]
 //   also as there is no OS the Rust std lib can't be used, as it depends on libc/musl/something similar
 
-mod domain;
+mod application_service;
 mod error;
 mod infrastructure;
 // importing elements (modules, structs, traits, ...) from other modules to be used in this file
@@ -17,7 +17,7 @@ type AppService<'a> =
     ApplicationService<'a, RunningTimer<RTC1>, Display<TIMER1>, InputControls, SerialBus<UARTE0>>;
 
 use crate::{
-    domain::{model::AppMode, port::Display as _, ApplicationService},
+    application_service::{port::Display as _, ApplicationService},
     error::{report_error, Error},
     infrastructure::{
         controls::InputControls,
@@ -32,6 +32,7 @@ use cortex_m::{
     prelude::_embedded_hal_blocking_delay_DelayMs,
 };
 use cortex_m_rt::entry;
+use keret_controller_domain::AppMode;
 use microbit::{
     board::Board,
     hal::{
@@ -42,7 +43,6 @@ use microbit::{
 };
 use panic_rtt_target as _;
 use rtt_target::rtt_init_print;
-
 // the following three variables are static, as they need to be accessed
 // by the main running code but also by the interrupts
 // as both could happen concurrently they are wrapped in a `Mutex` allowing only one

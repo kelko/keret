@@ -18,3 +18,4 @@ embedded-hal = "1.0.0"
 embedded-hal-nb = "1.0.0"
 snafu = { version = "0.8", default-features = false }
 keret-controller-transmit = { path = "../keret-controller-transmit", default-features = false }
+keret-controller-domain = { path = "../keret-controller-domain" }

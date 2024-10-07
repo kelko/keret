@@ -1,8 +1,5 @@
-use crate::domain::model::AppMode;
-use crate::{
-    domain::model::{Instant, InteractionRequest, TrackResult},
-    error::Error,
-};
+use crate::error::Error;
+use keret_controller_domain::{AppMode, Instant, InteractionRequest, TrackResult};
 
 /// Keep track of the running time, producing an ever-increasing, never resetting timestamp
 pub(crate) trait RunningTimeClock {

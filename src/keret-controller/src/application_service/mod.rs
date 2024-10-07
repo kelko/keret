@@ -1,12 +1,13 @@
+pub(crate) mod port;
+
 use crate::{
-    domain::{
-        model::{AppMode, Instant, InteractionRequest, StateUpdateResult},
-        port::{Display, OutsideMessaging, RunningTimeClock, UserInterface},
-    },
-    error::{report_error, Error, NoControlsSnafu},
+    application_service::port::{Display, OutsideMessaging, RunningTimeClock, UserInterface},
+    error::{report_error, DomainErrorOccurredSnafu, Error, NoControlsSnafu},
 };
 use core::cell::RefCell;
 use cortex_m::interrupt::{free, CriticalSection, Mutex};
+use keret_controller_domain::{AppMode, Instant, InteractionRequest, StateUpdateResult};
+use snafu::ResultExt;
 
 /// application service to orchestrate the domain logic
 pub(crate) struct ApplicationService<'a, TClock, TDisplay, TUserInterface, TSerialBus>
@@ -61,8 +62,12 @@ where
     /// let domain layer calculate the next state based on this input
     fn calculate_next_state(&mut self, mode: &AppMode) -> Result<AppMode, Error> {
         let (request, time) = free(|cs| (self.get_requested_interaction(cs), self.now(cs)));
-        let StateUpdateResult { mode, message } =
-            mode.handle_interaction_request(request?, time)?;
+        let StateUpdateResult {
+            mode,
+            result: message,
+        } = mode
+            .handle_interaction_request(request?, time)
+            .context(DomainErrorOccurredSnafu)?;
 
         if let Some(message) = message {
             self.serial_bus.send_result(message)?;

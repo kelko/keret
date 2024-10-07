@@ -1,7 +1,8 @@
 use crate::{
-    domain::{model::Instant, port::RunningTimeClock},
+    application_service::port::RunningTimeClock,
     error::{ClockInitializationFailedSnafu, Error},
 };
+use keret_controller_domain::Instant;
 use microbit::{
     hal::rtc::RtcInterrupt,
     hal::rtc::{Instance, RtcCompareReg},

@@ -1,3 +1,4 @@
+use keret_controller_domain::AppMode;
 use microbit::{
     display::nonblocking::Display as NonblockDisplay, gpio::DisplayPins, hal::timer::Instance,
 };
@@ -5,7 +6,7 @@ use tiny_led_matrix::Render;
 
 mod sprites;
 
-use crate::domain::model::AppMode;
+use crate::infrastructure::display::sprites::{ERROR_SPRITE, IDLE_SPRITE, RUNNING_SPRITE};
 pub(crate) use sprites::FATAL_SPRITE;
 
 /// convenience abstraction of the BSP display module
@@ -34,10 +35,15 @@ impl<T: Instance> Display<T> {
     }
 }
 
-impl<T: Instance> crate::domain::port::Display for Display<T> {
+impl<T: Instance> crate::application_service::port::Display for Display<T> {
     /// display a sprite associated with the given `AppMode`
     #[inline]
     fn show_mode(&mut self, app_mode: &AppMode) {
-        self.inner.show(app_mode);
+        let sprite = match app_mode {
+            AppMode::Idle => IDLE_SPRITE,
+            AppMode::Running(_) => RUNNING_SPRITE,
+            AppMode::Error => ERROR_SPRITE,
+        };
+        self.inner.show(&sprite);
     }
 }

@@ -809,6 +809,7 @@ dependencies = [
  "embedded-hal 1.0.0",
  "embedded-hal-nb",
  "heapless 0.7.17",
+ "keret-controller-domain",
  "keret-controller-transmit",
  "libm",
  "lsm303agr",
@@ -818,6 +819,13 @@ dependencies = [
  "rtt-target",
  "snafu",
  "tiny-led-matrix",
+]
+
+[[package]]
+name = "keret-controller-domain"
+version = "0.1.0"
+dependencies = [
+ "snafu",
 ]
 
 [[package]]

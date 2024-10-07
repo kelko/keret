@@ -1,4 +1,3 @@
-use crate::domain::model::Instant;
 use core::fmt::{Debug, Display, Formatter};
 use rtt_target::rprintln;
 use snafu::{Error as _, Snafu};
@@ -45,14 +44,14 @@ pub(crate) enum Error {
     DeserializeMessageFailed {
         source: keret_controller_transmit::Error,
     },
-    #[snafu(display("Incoherent timestamps. Started at {start} & ended at {end}"))]
-    IncoherentTimestamps { start: Instant, end: Instant },
     #[snafu(display("Failed to initialize the clock"))]
     ClockInitializationFailed,
-    #[snafu(display("No timer initialized to read the time from"))]
-    NoTimer,
     #[snafu(display("No controls initialized to read requested interaction from"))]
     NoControls,
+    #[snafu(display("Domain Error"))]
+    DomainErrorOccurred {
+        source: keret_controller_domain::Error,
+    },
 }
 
 /// send details of a top-level error over the rtt
