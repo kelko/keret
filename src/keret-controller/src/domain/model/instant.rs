@@ -26,10 +26,10 @@ impl From<u64> for Instant {
 }
 
 // extract the u64 timestamp from the instant
-impl Into<u64> for &Instant {
+impl From<&Instant> for u64 {
     #[inline(always)]
-    fn into(self) -> u64 {
-        self.0
+    fn from(val: &Instant) -> Self {
+        val.0
     }
 }
 

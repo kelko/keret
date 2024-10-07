@@ -60,9 +60,9 @@ impl From<Duration> for TrackResult {
 }
 
 // extract the duration as u64
-impl Into<u64> for TrackResult {
+impl From<TrackResult> for u64 {
     #[inline]
-    fn into(self) -> u64 {
-        self.0.into()
+    fn from(val: TrackResult) -> Self {
+        val.0.into()
     }
 }

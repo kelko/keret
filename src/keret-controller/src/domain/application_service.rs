@@ -49,7 +49,7 @@ where
     /// run the next cycle of the main logic loop, returning the new state
     pub(crate) fn next_cycle(&mut self, mode: &AppMode) -> AppMode {
         let next = self
-            .calculate_next_state(&mode)
+            .calculate_next_state(mode)
             .unwrap_or_else(handle_runtime_error);
         self.show_mode(&next);
 

@@ -9,9 +9,9 @@ impl From<u64> for Duration {
     }
 }
 
-impl Into<u64> for Duration {
+impl From<Duration> for u64 {
     #[inline(always)]
-    fn into(self) -> u64 {
-        self.0
+    fn from(val: Duration) -> Self {
+        val.0
     }
 }

@@ -13,6 +13,8 @@ mod infrastructure;
 /// convenience type alias to make code shorter/more readable
 /// meant for those static values which exist once and used from interrupts and inside domain layer
 type Singleton<T> = Mutex<RefCell<Option<T>>>;
+type AppService<'a> =
+    ApplicationService<'a, RunningTimer<RTC1>, Display<TIMER1>, InputControls, SerialBus<UARTE0>>;
 
 use crate::{
     domain::{model::AppMode, port::Display as _, ApplicationService},
@@ -80,12 +82,7 @@ fn main() -> ! {
 }
 
 /// initialize the board, creating all helper objects and put those necessary in the Mutexes
-fn initialize_app_service<'a>(
-    board: Board,
-) -> (
-    ApplicationService<'a, RunningTimer<RTC1>, Display<TIMER1>, InputControls, SerialBus<UARTE0>>,
-    Timer<TIMER0, Periodic>,
-) {
+fn initialize_app_service<'a>(board: Board) -> (AppService<'a>, Timer<TIMER0, Periodic>) {
     let mut display = Display::new(board.TIMER1, board.display_pins);
     display.show_mode(&AppMode::Idle);
 
