@@ -8,8 +8,6 @@ where
 {
     #[snafu(display("Failed writing data to the serial port"))]
     SendingMessageToOutsideFailed { source: OutsideMessagingError },
-    #[snafu(display("No controls initialized to read requested interaction from"))]
-    NoControls,
     #[snafu(display("Domain Error"))]
     DomainErrorOccurred {
         source: keret_controller_domain::Error,

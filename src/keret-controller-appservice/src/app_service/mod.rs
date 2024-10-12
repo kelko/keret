@@ -16,7 +16,7 @@ where
     TDisplay: Display,
     TUserInterface: UserInterface,
     TSerialBus: OutsideMessaging,
-    TReportFunc: Fn(&Error<TSerialBus::Error>) + Send + Sync,
+    TReportFunc: FnMut(&Error<TSerialBus::Error>) + Send + Sync,
 {
     pub running_timer: TClock,
     pub display: TDisplay,
@@ -32,7 +32,7 @@ where
     TDisplay: Display,
     TUserInterface: UserInterface,
     TSerialBus: OutsideMessaging,
-    TReportFunc: Fn(&Error<TSerialBus::Error>) + Send + Sync,
+    TReportFunc: FnMut(&Error<TSerialBus::Error>) + Send + Sync,
 {
     /// setup a new `ApplicationService` instance
     #[inline]
@@ -90,7 +90,7 @@ where
 
     /// report an error that happened while executing the main loop
     /// and switch the AppMode appropriately to indicate it's in a failure state
-    fn handle_runtime_error(&self, err: Error<TSerialBus::Error>) -> AppMode {
+    fn handle_runtime_error(&mut self, err: Error<TSerialBus::Error>) -> AppMode {
         (self.report_error)(&err);
         AppMode::Error
     }
