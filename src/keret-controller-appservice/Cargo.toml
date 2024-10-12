@@ -1,0 +1,12 @@
+[package]
+name = "keret-controller-appservice"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+snafu = { version = "0.8", default-features = false }
+keret-controller-domain = { path = "../keret-controller-domain" }
+keret-controller-transmit = { path = "../keret-controller-transmit", default-features = false }
+
+[dev-dependencies]
+mockall = "0.13.0"

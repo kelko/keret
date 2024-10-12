@@ -1,4 +1,4 @@
-use crate::application_service::port::UserInterface;
+use keret_controller_appservice::ports::UserInterface;
 use keret_controller_domain::InteractionRequest;
 use microbit::{board::Buttons, hal::gpiote::Gpiote, pac};
 

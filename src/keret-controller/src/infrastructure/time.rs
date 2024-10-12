@@ -1,7 +1,5 @@
-use crate::{
-    application_service::port::RunningTimeClock,
-    error::{ClockInitializationFailedSnafu, Error},
-};
+use crate::error::{ClockInitializationFailedSnafu, InitializationError};
+use keret_controller_appservice::ports::RunningTimeClock;
 use keret_controller_domain::Instant;
 use microbit::{
     hal::rtc::RtcInterrupt,
@@ -24,7 +22,7 @@ pub(crate) struct RunningTimer<T> {
 
 impl<T: Instance> RunningTimer<T> {
     /// create a new instance, configuring the RTC and starting the CLOCK in low frequency
-    pub(crate) fn new(clock: CLOCK, rtc_component: T) -> Result<Self, Error> {
+    pub(crate) fn new(clock: CLOCK, rtc_component: T) -> Result<Self, InitializationError> {
         Clocks::new(clock).start_lfclk();
 
         let Ok(mut rtc) = Rtc::new(rtc_component, 511) else {

@@ -2,6 +2,7 @@
 members = [
     "src/keret-adapter",
     "src/keret-controller",
+    "src/keret-controller-appservice",
     "src/keret-controller-domain",
     "src/keret-controller-transmit",
     "src/keret-service-transmit",

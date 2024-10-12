@@ -35,7 +35,7 @@ impl<T: Instance> Display<T> {
     }
 }
 
-impl<T: Instance> crate::application_service::port::Display for Display<T> {
+impl<T: Instance> keret_controller_appservice::ports::Display for Display<T> {
     /// display a sprite associated with the given `AppMode`
     #[inline]
     fn show_mode(&mut self, app_mode: &AppMode) {

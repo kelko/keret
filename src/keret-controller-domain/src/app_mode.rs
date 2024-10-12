@@ -1,8 +1,5 @@
 use crate::results::StateUpdateResult;
-use crate::{
-    error::{IncoherentTimestampsSnafu, NoTimerSnafu},
-    Error, Instant, InteractionRequest,
-};
+use crate::{error::IncoherentTimestampsSnafu, Error, Instant, InteractionRequest};
 
 /// current state of the application logic (the "domain")
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
@@ -21,16 +18,10 @@ impl AppMode {
     pub fn handle_interaction_request(
         &self,
         request: InteractionRequest,
-        now: Option<Instant>,
+        timestamp: Instant,
     ) -> Result<StateUpdateResult, Error> {
         match request {
-            InteractionRequest::ToggleMode => {
-                let Some(timestamp) = now else {
-                    return NoTimerSnafu.fail();
-                };
-
-                self.toggle_mode(timestamp)
-            }
+            InteractionRequest::ToggleMode => self.toggle_mode(timestamp),
             InteractionRequest::Reset => Ok(StateUpdateResult::new(AppMode::Idle)),
             InteractionRequest::None => Ok(StateUpdateResult::new(*self)),
         }
