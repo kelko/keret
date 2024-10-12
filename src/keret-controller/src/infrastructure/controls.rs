@@ -1,4 +1,5 @@
-use crate::domain::{model::InteractionRequest, port::UserInterface};
+use keret_controller_appservice::ports::UserInterface;
+use keret_controller_domain::InteractionRequest;
 use microbit::{board::Buttons, hal::gpiote::Gpiote, pac};
 
 /// reading and interpreting the button presses to calculate requested interaction

@@ -5,24 +5,17 @@
 //   so the "main" method is not indicator for code entry, but below you will find #[entry]
 //   also as there is no OS the Rust std lib can't be used, as it depends on libc/musl/something similar
 
-mod domain;
 mod error;
 mod infrastructure;
 // importing elements (modules, structs, traits, ...) from other modules to be used in this file
 
-/// convenience type alias to make code shorter/more readable
-/// meant for those static values which exist once and used from interrupts and inside domain layer
-type Singleton<T> = Mutex<RefCell<Option<T>>>;
-type AppService<'a> =
-    ApplicationService<'a, RunningTimer<RTC1>, Display<TIMER1>, InputControls, SerialBus<UARTE0>>;
-
+use crate::error::report_domain_error;
+use crate::infrastructure::serialize::SerialBusError;
 use crate::{
-    domain::{model::AppMode, port::Display as _, ApplicationService},
-    error::{report_error, Error},
+    error::{report_error, InitializationError},
     infrastructure::{
         controls::InputControls,
         display::{Display, FATAL_SPRITE},
-        serialize::SerialBus,
         time::RunningTimer,
     },
 };
@@ -32,6 +25,11 @@ use cortex_m::{
     prelude::_embedded_hal_blocking_delay_DelayMs,
 };
 use cortex_m_rt::entry;
+use infrastructure::serialize::SerialBus;
+use keret_controller_appservice::{
+    ports::Display as _, ApplicationService, Error as AppServiceError,
+};
+use keret_controller_domain::AppMode;
 use microbit::{
     board::Board,
     hal::{
@@ -43,20 +41,26 @@ use microbit::{
 use panic_rtt_target as _;
 use rtt_target::rtt_init_print;
 
-// the following three variables are static, as they need to be accessed
+/// convenience type alias to make code shorter/more readable
+/// meant for those static values which exist once and used from interrupts and inside domain layer
+type Singleton<T> = Mutex<RefCell<Option<T>>>;
+
+/// convenience type alias for the big, complex app service with all types
+type AppService<'a> = ApplicationService<
+    RunningTimer<RTC1>,
+    Display<TIMER1>,
+    InputControls,
+    SerialBus<UARTE0>,
+    fn(&AppServiceError<SerialBusError>),
+>;
+
+// the following variable is static, as it needs to be accessed
 // by the main running code but also by the interrupts
-// as both could happen concurrently they are wrapped in a `Mutex` allowing only one
+// as both could happen concurrently it is wrapped in a `Mutex` allowing only one
 // concurrent access at a time (using Cortex hardware features)
 // and in a `RefCell` so we can call mutable methods on it (so-called "inner mutability")
 
-/// the primary timer used to calculate the running time
-static RUNNING_TIMER: Singleton<RunningTimer<RTC1>> = Mutex::new(RefCell::new(None));
-
-/// the display to show something on the LED matrix
-static DISPLAY: Singleton<Display<TIMER1>> = Mutex::new(RefCell::new(None));
-
-/// wrapper for input controls handling
-static CONTROLS: Singleton<InputControls> = Mutex::new(RefCell::new(None));
+static APP_SERVICE: Singleton<AppService> = Mutex::new(RefCell::new(None));
 
 /// entry point for the application. Could have any name, `main` used to follow convention from C
 /// Initializes the controller as well as go into the execution loop. This method should never return
@@ -72,17 +76,28 @@ fn main() -> ! {
     };
 
     let mut mode = AppMode::Idle;
-    let (mut app_service, mut main_loop_timer) = initialize_app_service(board);
+    let mut main_loop_timer = initialize_board(board);
 
     // main execution loop, should never end
     loop {
-        mode = app_service.next_cycle(&mode);
+        free(|cs| {
+            let mut app_service = APP_SERVICE.borrow(cs).borrow_mut();
+            let Some(app_service) = app_service.as_mut() else {
+                // if we don't have access on the App Service we don't have access on anything
+                // thus no way to display or send messages. Just panic and require hard restart
+                // this situation _should_ never arise, unless something is fatally flawed
+                panic!("App Service must exist by now. Needs hard restart");
+            };
+            mode = app_service.next_cycle(&mode);
+        });
         main_loop_timer.delay_ms(500_u32);
     }
 }
 
-/// initialize the board, creating all helper objects and put those necessary in the Mutexes
-fn initialize_app_service<'a>(board: Board) -> (AppService<'a>, Timer<TIMER0, Periodic>) {
+/// initialize the board, creating all helper objects and put the main "app service" in the mutex
+/// also initializes the timer used to sleep on the main loop, as the passed in Board object
+/// needs to be used in one place only, so everything board "owning" happens here
+fn initialize_board(board: Board) -> Timer<TIMER0, Periodic> {
     let mut display = Display::new(board.TIMER1, board.display_pins);
     display.show_mode(&AppMode::Idle);
 
@@ -106,21 +121,22 @@ fn initialize_app_service<'a>(board: Board) -> (AppService<'a>, Timer<TIMER0, Pe
     NVIC::unpend(Interrupt::GPIOTE);
 
     free(|cs| {
-        *DISPLAY.borrow(cs).borrow_mut() = Some(display);
-        *CONTROLS.borrow(cs).borrow_mut() = Some(controls);
-        *RUNNING_TIMER.borrow(cs).borrow_mut() = Some(running_timer);
+        *APP_SERVICE.borrow(cs).borrow_mut() = Some(ApplicationService::new(
+            running_timer,
+            display,
+            controls,
+            serial_bus,
+            report_domain_error,
+        ));
     });
 
-    (
-        ApplicationService::new(&RUNNING_TIMER, &DISPLAY, &CONTROLS, serial_bus),
-        main_loop_timer,
-    )
+    main_loop_timer
 }
 
 /// report an error that happened during initialization, don't even go into the main loop
-fn handle_init_error<T: Instance>(mut display: Display<T>, err: Error) -> ! {
+fn handle_init_error<T: Instance>(mut display: Display<T>, err: InitializationError) -> ! {
     display.show_sprite(&FATAL_SPRITE);
-    report_error(err);
+    report_error(&err);
 
     loop {
         // don't let user interact if init failed
@@ -137,8 +153,8 @@ fn handle_init_error<T: Instance>(mut display: Display<T>, err: Error) -> ! {
 #[interrupt]
 fn RTC1() {
     free(|cs| {
-        if let Some(timer) = RUNNING_TIMER.borrow(cs).borrow_mut().as_mut() {
-            timer.tick_timer();
+        if let Some(app_service) = APP_SERVICE.borrow(cs).borrow_mut().as_mut() {
+            app_service.running_timer.tick_timer();
         }
     })
 }
@@ -147,8 +163,8 @@ fn RTC1() {
 #[interrupt]
 fn TIMER1() {
     free(|cs| {
-        if let Some(display) = DISPLAY.borrow(cs).borrow_mut().as_mut() {
-            display.handle_display_event();
+        if let Some(app_service) = APP_SERVICE.borrow(cs).borrow_mut().as_mut() {
+            app_service.display.handle_display_event();
         }
     })
 }
@@ -157,8 +173,8 @@ fn TIMER1() {
 #[interrupt]
 fn GPIOTE() {
     free(|cs| {
-        if let Some(controls) = CONTROLS.borrow(cs).borrow_mut().as_mut() {
-            controls.check_input();
+        if let Some(app_service) = APP_SERVICE.borrow(cs).borrow_mut().as_mut() {
+            app_service.controls.check_input();
         }
     })
 }

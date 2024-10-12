@@ -1,7 +1,9 @@
 [workspace]
 members = [
-    "src/keret-controller",
     "src/keret-adapter",
+    "src/keret-controller",
+    "src/keret-controller-appservice",
+    "src/keret-controller-domain",
     "src/keret-controller-transmit",
     "src/keret-service-transmit",
     "src/keret-service",
@@ -14,4 +16,4 @@ lto = true
 
 [profile.release.package.keret-controller]
 codegen-units = 1
-debug = true
+#debug = true
