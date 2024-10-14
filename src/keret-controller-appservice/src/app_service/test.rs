@@ -183,10 +183,7 @@ fn next_cycle_reports_error_on_inconsistent_timestamps() {
     bus.expect_send_result().never();
 
     let mut service = ApplicationService::new(clock, display, ui, bus, |error| {
-        error_was_reported = match error {
-            Error::DomainErrorOccurred { .. } => true,
-            _ => false,
-        };
+        error_was_reported = matches!(error, Error::DomainErrorOccurred { .. });
     });
     let mode = AppMode::Running(Instant::from(SECOND_TIMESTAMP));
 
@@ -294,10 +291,7 @@ fn next_cycle_reports_error_when_sending_fails() {
         .returning(|_| ErrorDuringSendSnafu.fail());
 
     let mut service = ApplicationService::new(clock, display, ui, bus, |error| {
-        error_was_reported = match error {
-            Error::SendingMessageToOutsideFailed { .. } => true,
-            _ => false,
-        };
+        error_was_reported = matches!(error, Error::SendingMessageToOutsideFailed { .. })
     });
     let mode = AppMode::Running(Instant::from(FIRST_TIMESTAMP));
 
