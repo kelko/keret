@@ -28,6 +28,9 @@ pub enum RepositoryError {
     },
     #[snafu(display("Lock is poisoned, can't acquire"))]
     LockPoisoned { backtrace: Option<Backtrace> },
+    #[cfg(test)]
+    #[snafu(display("Test Error"))]
+    ErrorOnTest,
 }
 
 pub(crate) trait RepositoryStorage {
