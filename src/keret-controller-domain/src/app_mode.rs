@@ -86,7 +86,7 @@ mod test {
         let timestamp: Instant = SOME_TIMESTAMP.into();
 
         // act
-        let actual = mode.handle_interaction_request(interaction_request, Some(timestamp));
+        let actual = mode.handle_interaction_request(interaction_request, timestamp);
 
         // assert
         assert_eq!(actual, Ok(StateUpdateResult::new(AppMode::Idle)));
@@ -100,7 +100,7 @@ mod test {
         let timestamp: Instant = SOME_TIMESTAMP.into();
 
         // act
-        let actual = mode.handle_interaction_request(interaction_request, Some(timestamp));
+        let actual = mode.handle_interaction_request(interaction_request, timestamp);
 
         // assert
         assert_eq!(actual, Ok(StateUpdateResult::new(AppMode::Idle)));
@@ -114,7 +114,7 @@ mod test {
         let timestamp: Instant = SOME_TIMESTAMP.into();
 
         // act
-        let actual = mode.handle_interaction_request(interaction_request, Some(timestamp));
+        let actual = mode.handle_interaction_request(interaction_request, timestamp);
 
         // assert
         assert_eq!(
@@ -133,7 +133,7 @@ mod test {
         let timestamp: Instant = BIGGER_TIMESTAMP.into();
 
         // act
-        let actual = mode.handle_interaction_request(interaction_request, Some(timestamp));
+        let actual = mode.handle_interaction_request(interaction_request, timestamp);
 
         // assert
         assert_eq!(
@@ -152,7 +152,7 @@ mod test {
         let timestamp: Instant = BIGGER_TIMESTAMP.into();
 
         // act
-        let actual = mode.handle_interaction_request(interaction_request, Some(timestamp));
+        let actual = mode.handle_interaction_request(interaction_request, timestamp);
 
         // assert
         assert_eq!(actual, Ok(StateUpdateResult::new(AppMode::Idle)));
@@ -166,7 +166,7 @@ mod test {
         let timestamp: Instant = BIGGER_TIMESTAMP.into();
 
         // act
-        let actual = mode.handle_interaction_request(interaction_request, Some(timestamp));
+        let actual = mode.handle_interaction_request(interaction_request, timestamp);
 
         // assert
         assert_eq!(
@@ -186,7 +186,7 @@ mod test {
         let timestamp: Instant = SOME_TIMESTAMP.into();
 
         // act
-        let actual = mode.handle_interaction_request(interaction_request, Some(timestamp));
+        let actual = mode.handle_interaction_request(interaction_request, timestamp);
 
         // assert
         assert_eq!(
@@ -206,7 +206,7 @@ mod test {
         let timestamp: Instant = SOME_TIMESTAMP.into();
 
         // act
-        let actual = mode.handle_interaction_request(interaction_request, Some(timestamp));
+        let actual = mode.handle_interaction_request(interaction_request, timestamp);
 
         // assert
         assert_eq!(actual, Ok(StateUpdateResult::new(AppMode::Error)));
@@ -220,7 +220,7 @@ mod test {
         let timestamp: Instant = SOME_TIMESTAMP.into();
 
         // act
-        let actual = mode.handle_interaction_request(interaction_request, Some(timestamp));
+        let actual = mode.handle_interaction_request(interaction_request, timestamp);
 
         // assert
         assert_eq!(actual, Ok(StateUpdateResult::new(AppMode::Error)));
@@ -234,22 +234,9 @@ mod test {
         let timestamp: Instant = SOME_TIMESTAMP.into();
 
         // act
-        let actual = mode.handle_interaction_request(interaction_request, Some(timestamp));
+        let actual = mode.handle_interaction_request(interaction_request, timestamp);
 
         // assert
         assert_eq!(actual, Ok(StateUpdateResult::new(AppMode::Idle)));
-    }
-
-    #[test]
-    fn any_app_mode_handle_toggle_interaction_request_without_timestamp_returns_error() {
-        // arrange
-        let mode = AppMode::Error;
-        let interaction_request = InteractionRequest::ToggleMode;
-
-        // act
-        let actual = mode.handle_interaction_request(interaction_request, None);
-
-        // assert
-        assert_eq!(actual, Err(Error::NoTimer));
     }
 }
