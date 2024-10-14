@@ -803,9 +803,11 @@ dependencies = [
 name = "keret-adapter"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "clap",
  "keret-controller-transmit",
  "keret-service-transmit",
+ "mockall",
  "reqwest",
  "serialport",
  "snafu",

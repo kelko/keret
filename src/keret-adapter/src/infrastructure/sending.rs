@@ -1,3 +1,5 @@
+use crate::model::TrackResult;
+use async_trait::async_trait;
 use keret_service_transmit::ActionReport;
 use snafu::{ResultExt, Snafu};
 
@@ -18,9 +20,17 @@ impl ReportSender {
     pub(crate) fn new(target: String) -> Self {
         Self { target }
     }
+}
 
-    pub(crate) async fn send(&self, report: impl Into<ActionReport>) -> Result<(), SendingError> {
-        let report = report.into();
+#[async_trait]
+impl crate::app_service::ports::ReportMessaging for ReportSender {
+    type Error = SendingError;
+
+    async fn send(&self, report: TrackResult) -> Result<(), Self::Error> {
+        // extract the actual value from the adapter value object
+        let report: u64 = report.into();
+        // turn the value into a sendable ActionReport for the service
+        let report: ActionReport = report.into();
         let client = reqwest::Client::new();
 
         let _res = client

@@ -1,10 +1,8 @@
-mod listening;
-mod sending;
+mod app_service;
+mod infrastructure;
+mod model;
 
-use crate::listening::PortListener;
-use crate::sending::ReportSender;
 use clap::Parser;
-use snafu::{ResultExt, Snafu};
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -18,20 +16,6 @@ struct Cli {
     url: String,
 }
 
-#[derive(Debug, Snafu)]
-pub(crate) enum AppError {
-    #[snafu(display("An error occurred while listening on serial port"))]
-    FailedListeningOnPort {
-        #[snafu(backtrace)]
-        source: listening::ListeningError,
-    },
-    #[snafu(display("An error occurred while trying to send report to target"))]
-    FailedSendingToTarget {
-        #[snafu(backtrace)]
-        source: sending::SendingError,
-    },
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
@@ -41,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(1);
     };
 
-    let mut listener = match listening::PortListener::new(device) {
+    let listener = match infrastructure::listening::PortListener::new(device) {
         Ok(l) => l,
         Err(e) => {
             report(&e);
@@ -49,35 +33,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    let sender = sending::ReportSender::new(url);
+    let sender = infrastructure::sending::ReportSender::new(url);
+    let mut app_service = app_service::ApplicationService::new(listener, sender);
 
     loop {
         tokio::time::sleep(Duration::from_millis(500)).await;
 
-        match read_and_forward(&mut listener, &sender).await {
+        match app_service.read_and_forward().await {
             Ok(()) => {}
             Err(e) => {
                 report(&e);
             }
         }
     }
-}
-
-async fn read_and_forward(
-    listener: &mut PortListener,
-    sender: &ReportSender,
-) -> Result<(), AppError> {
-    let report = listener
-        .read_next_report()
-        .context(FailedListeningOnPortSnafu)?;
-    if let Some(report) = report {
-        sender
-            .send(report.duration())
-            .await
-            .context(FailedSendingToTargetSnafu)?;
-    }
-
-    Ok(())
 }
 
 pub fn report<E>(err: &E)

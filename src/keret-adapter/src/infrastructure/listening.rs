@@ -1,3 +1,4 @@
+use crate::model::TrackResult;
 use keret_controller_transmit::ActionReport;
 use serialport::SerialPort;
 use snafu::{ResultExt, Snafu};
@@ -37,8 +38,12 @@ impl PortListener {
 
         Ok(Self { port, buffer })
     }
+}
 
-    pub(crate) fn read_next_report(&mut self) -> Result<Option<ActionReport>, ListeningError> {
+impl crate::app_service::ports::TrackResultInput for PortListener {
+    type Error = ListeningError;
+
+    fn read_next_report(&mut self) -> Result<Option<TrackResult>, Self::Error> {
         let mut read_buffer: Vec<u8> = vec![0; 10];
 
         match self.port.read(&mut read_buffer) {
@@ -67,7 +72,7 @@ impl PortListener {
                 self.buffer.pop();
             }
 
-            Ok(Some(incoming_report))
+            Ok(Some(incoming_report.duration().into()))
         } else {
             Ok(None)
         }
